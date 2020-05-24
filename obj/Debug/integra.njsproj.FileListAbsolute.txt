@@ -1,0 +1,3 @@
+C:\Users\ands6ft\source\repos\integra\integra\obj\Debug\integra.njsprojAssemblyReference.cache
+C:\Users\ands6ft\source\repos\integra\integra\obj\Debug\integra.njsproj.CoreCompileInputs.cache
+C:\Users\ands6ft\source\repos\integra\integra\bin\Microsoft.NodejsTools.WebRole.dll
