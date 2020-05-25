@@ -1,6 +1,8 @@
 
 var bcrypt = require('bcrypt');
 const request = require('request');
+var cookie = require('cookie');
+var cookies_js = require('js-cookie');
 
 var express = require('express');
 var app = express();
@@ -320,7 +322,8 @@ app.post('/checkauth', function (req, res) {
 var authTypes = {
     "none": "none",
     "basic": "basic",
-    "bearer": "bearer"
+    "bearer": "bearer",
+    "authCookies": "authCookies"
 }
 
 
@@ -328,19 +331,22 @@ var authTypes = {
 function getData(options, cb) {
 
     var getUrl = options.getUrl;
-    var authType = options.authType; 
-    var isJSON = options.isJSON; 
-    var dataProperty = options.dataProperty; 
-    var authUrl = options.authUrl; 
+    var authType = options.authType;
+    var isJSON = options.isJSON;
+    var dataProperty = options.dataProperty;
+    var authUrl = options.authUrl;
     var login = options.login;
-    var password = options.password; 
+    var password = options.password;
     var parcel = options.parcel;
+    var authParcel = options.authParcel;
     var authHeaders = options.authHeaders;
     var headers = options.headers;
 
     var opt = {
-        url:getUrl,
-        headers: headers
+        
+        url: getUrl,
+        headers: headers,
+        json: parcel
 
     }
 
@@ -380,7 +386,7 @@ function getData(options, cb) {
             }
             if (dataProperty) {
                 //console.log('data:', jsonBody["data"]);
-                cb(jsonBody["data"]);
+                cb(jsonBody[dataProperty]);
             }
             else {
                 //console.log('data:', jsonBody);
@@ -415,7 +421,7 @@ function getData(options, cb) {
                 }
                 if (dataProperty) {
                     //console.log('data:', jsonBody["data"]);
-                    cb(jsonBody["data"]);
+                    cb(jsonBody[dataProperty]);
                 }
                 else {
                     //console.log('data:', jsonBody);
@@ -428,22 +434,106 @@ function getData(options, cb) {
 
 
     }
+    else if (authType == authTypes.authCookies) {
+
+
+        request({
+            method: 'POST',
+            url: authUrl,
+            json: authParcel,
+            headers: authHeaders
+        }, function (error, response, body) {
+            console.error('authbody:', body);
+            console.error('error:', error);
+            console.log('statusCode:', response && response.statusCode);
+            var h = cookie.parse(response.headers["set-cookie"].join(';'));
+            var t = response.headers["set-cookie"];
+            opt.headers = {};
+            opt.headers[".ASPXAUTH"] = h[".ASPXAUTH"];
+            opt.headers["BPMCSRF"] = h["BPMCSRF"];
+            // cookies_js.set('.ASPXAUTH', h[".ASPXAUTH"],{'path':'/', 'domain':'072988-crm-bundle.terrasoft.ru'});
+            // cookies_js.set('BPMCSRF', h["BPMCSRF"],{'path':'/', 'domain':'072988-crm-bundle.terrasoft.ru'});
+
+            //opt.headers["Content-Type"] = "application/json";
+            opt.method = "POST";
+            // console.log(cookies_js.get(".ASPXAUTH"));
+            console.log('opt:', opt);
+            
+            request(opt, function (error, response, body) {
+                console.error('error:', error);
+                console.log('statusCode:', response && response.statusCode);
+                var jsonBody = [];
+                if (isJSON) {
+                    jsonBody = body;
+                }
+                else {
+                    jsonBody = JSON.parse(body);
+                }
+                if (dataProperty) {
+                    //console.log('data:', jsonBody["data"]);
+                    cb(jsonBody[dataProperty]);
+                }
+                else {
+                    //console.log('data:', jsonBody);
+                    cb(jsonBody);
+                }
+            });
+
+        })
+
+
+
+    }
 
 
 }
 
 var options = {
-    getUrl : "https://reqres.in/api/users?page=1",
-    authType : "none",
-    isJSON : false, 
-    dataProperty : "data", 
-    authUrl : "", 
-    login : "",
-    password : "", 
-    parcel : {}
+    getUrl: "https://reqres.in/api/users?page=1",
+    authType: "none",
+    isJSON: false,
+    dataProperty: "data",
+    authUrl: "",
+    login: "",
+    password: "",
+    parcel: {}
 
 }
-getData(options, function (data) {
+
+var options_creatio = {
+    getUrl: "https://072988-crm-bundle.terrasoft.ru/0/dataservice/json/reply/SelectQuery",
+    authType: authTypes.authCookies,
+    isJSON: true,
+    dataProperty: "",
+    authUrl: "https://072988-crm-bundle.terrasoft.ru/ServiceModel/AuthService.svc/Login",
+    login: "",
+    password: "",
+    authParcel: {
+        "UserName": "Саулин Андрей",
+        "UserPassword": "Professional1"
+    },
+    authHeaders: {
+        "ForceUseSession": false,
+        "Content-Type": "application/json"
+    },
+    parcel: {
+        "RootSchemaName": "Opportunity",
+        "OperationType": 0,
+
+        "AllColumns": true,
+        "Filters": {
+            "RootSchemaName": "Opportunity",
+            "FilterType": 1,
+            "ComparisonType": "GreaterOrEqual",
+            "LeftExpression": { "ExpressionType": 0, "ColumnPath": "CreatedOn" },
+            "RightExpression": { "ExpressionType": 1, "FunctionType": 1, "MacrosType": 10 }
+
+        }
+
+    }
+
+}
+getData(options_creatio, function (data) {
 
     console.log(data);
 
