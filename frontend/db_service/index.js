@@ -1,30 +1,34 @@
-var express = require('express');
+
 var bcrypt = require('bcrypt');
+const request = require('request');
+
+var express = require('express');
 var app = express();
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
 var cors = require('cors');
 app.use(cors());
 app.options('*', cors());
+
+
 var port = process.env.PORT || 8080;
+
 var mysql = require('mysql');
+var mssql = require('mssql');
+
+
 var config = require('./db_config');
 var jwt = require('express-jwt');
 var jwt_sign = require('jsonwebtoken');
 app.use(express.static('assets'));
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
 
 
-//var con = mysql.createConnection(config);
-// con.connect(function (err) {
-//     if (err) {
-//         console.error('error connecting: ' + err.stack);
-//         return;
-//     }
 
-//     console.log('connected as id ' + con.threadId);
-// });
+
 con = mysql.createPool(config);
+
 
 app.listen(port);
 console.log('The magic happens on port ' + port);
@@ -78,7 +82,7 @@ app.get('/departments', function (req, res) {
     var clientid = req.body.clientid;
 
 
-    var sqlStr = "select department from users where clientid = '"+clientid+"' group by department" 
+    var sqlStr = "select department from users where clientid = '" + clientid + "' group by department"
     con.query(sqlStr, function (err, result) {
         if (err)
             res.end(JSON.stringify(err));
@@ -98,28 +102,28 @@ app.get('/orders', function (req, res) {
     var sqlStr = "select orders.*, users.name, absencetypes.name as absencetype, absencetypes.iconfa, t1.name as approvedby from orders left join users on users.id = orders.userid left join absencetypes on absencetypes.id = orders.typeid left join users as t1 on t1.personnelnumber = orders.approvedbypn where orders.clientid = '" + clientid + "'"
 
     if (userid) {
-        sqlStr = sqlStr  + " and orders.userid = '" + userid + "'"
+        sqlStr = sqlStr + " and orders.userid = '" + userid + "'"
     }
 
     if (onlyapproved) {
-        sqlStr = sqlStr  + " and orders.approved = 1"
-    }    
+        sqlStr = sqlStr + " and orders.approved = 1"
+    }
 
     if (ondate) {
-        sqlStr = sqlStr  + " and (orders.startdate <= '" + ondate + "' and orders.enddate >= '" + ondate + "' )"
-    } 
+        sqlStr = sqlStr + " and (orders.startdate <= '" + ondate + "' and orders.enddate >= '" + ondate + "' )"
+    }
 
     else if (period) {
-        sqlStr = sqlStr  + " and ((orders.startdate <= '" + period.startdate + "' and orders.enddate >= '" + period.startdate + "') or (orders.startdate <= '" + period.enddate + "' and orders.enddate >= '" + period.enddate + "') or (orders.startdate >= '" + period.startdate + "' and orders.enddate <= '" + period.enddate + "'))"
-    } 
+        sqlStr = sqlStr + " and ((orders.startdate <= '" + period.startdate + "' and orders.enddate >= '" + period.startdate + "') or (orders.startdate <= '" + period.enddate + "' and orders.enddate >= '" + period.enddate + "') or (orders.startdate >= '" + period.startdate + "' and orders.enddate <= '" + period.enddate + "'))"
+    }
 
     if (approvedbypn) {
-        sqlStr = sqlStr  + " and orders.approvedbypn = '" + approvedbypn + "'"
-    }   
+        sqlStr = sqlStr + " and orders.approvedbypn = '" + approvedbypn + "'"
+    }
 
     if (forapprovepn) {
-        sqlStr = sqlStr  + " and (users.approvepn = '" + forapprovepn + "' and orders.approved = 0)"
-    } 
+        sqlStr = sqlStr + " and (users.approvepn = '" + forapprovepn + "' and orders.approved = 0)"
+    }
 
     con.query(sqlStr, function (err, result) {
         if (err)
@@ -310,5 +314,131 @@ app.post('/checkauth', function (req, res) {
 
     res.end("checked");
 
+
+});
+
+var authTypes = {
+    "none": "none",
+    "basic": "basic",
+    "bearer": "bearer"
+}
+
+
+
+function getData(options, cb) {
+
+    var getUrl = options.getUrl;
+    var authType = options.authType; 
+    var isJSON = options.isJSON; 
+    var dataProperty = options.dataProperty; 
+    var authUrl = options.authUrl; 
+    var login = options.login;
+    var password = options.password; 
+    var parcel = options.parcel;
+
+    if (authType == authTypes.none) {
+
+
+        request(getUrl, function (error, response, body) {
+            console.error('error:', error);
+            console.log('statusCode:', response && response.statusCode);
+            var jsonBody = [];
+            if (isJSON) {
+                jsonBody = body;
+            }
+            else {
+                jsonBody = JSON.parse(body);
+            }
+            if (dataProperty) {
+                //console.log('data:', jsonBody["data"]);
+                cb(jsonBody["data"]);
+            }
+            else {
+                //console.log('data:', jsonBody);
+                cb(jsonBody);
+            }
+        });
+    }
+    else if (authType == authTypes.basic) {
+        request(getUrl, function (error, response, body) {
+            console.error('error:', error);
+            console.log('statusCode:', response && response.statusCode);
+            var jsonBody = [];
+            if (isJSON) {
+                jsonBody = body;
+            }
+            else {
+                jsonBody = JSON.parse(body);
+            }
+            if (dataProperty) {
+                //console.log('data:', jsonBody["data"]);
+                cb(jsonBody["data"]);
+            }
+            else {
+                //console.log('data:', jsonBody);
+                cb(jsonBody);
+            }
+        }).auth(login, password, false);
+    }
+    else if (authType == authTypes.bearer) {
+
+        var sendData = {
+            "username": login,
+            "password": password
+        }
+        request({
+            method: 'POST',
+            url: authUrl,
+            json: sendData
+        }, function (error, response, body) {
+
+            console.error('error:', error);
+            console.log('statusCode:', response && response.statusCode);
+
+            bearerToken = body;
+
+            request(getUrl, function (error, response, body) {
+                console.error('error:', error);
+                console.log('statusCode:', response && response.statusCode);
+                var jsonBody = [];
+                if (isJSON) {
+                    jsonBody = body;
+                }
+                else {
+                    jsonBody = JSON.parse(body);
+                }
+                if (dataProperty) {
+                    //console.log('data:', jsonBody["data"]);
+                    cb(jsonBody["data"]);
+                }
+                else {
+                    //console.log('data:', jsonBody);
+                    cb(jsonBody);
+                }
+            }).auth(null, null, true, bearerToken);
+
+        })
+
+
+
+    }
+
+
+}
+
+var options = {
+    getUrl : "https://reqres.in/api/users?page=1",
+    authType : "none",
+    isJSON : false, 
+    dataProperty : "data", 
+    authUrl : "", 
+    login : "",
+    password : "", 
+    parcel : {}
+
+}
+getData(options, function (data) {
+
+    console.log(data);
 
 });
