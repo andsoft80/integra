@@ -335,11 +335,19 @@ function getData(options, cb) {
     var login = options.login;
     var password = options.password; 
     var parcel = options.parcel;
+    var authHeaders = options.authHeaders;
+    var headers = options.headers;
+
+    var opt = {
+        url:getUrl,
+        headers: headers
+
+    }
 
     if (authType == authTypes.none) {
 
 
-        request(getUrl, function (error, response, body) {
+        request(opt, function (error, response, body) {
             console.error('error:', error);
             console.log('statusCode:', response && response.statusCode);
             var jsonBody = [];
@@ -360,7 +368,7 @@ function getData(options, cb) {
         });
     }
     else if (authType == authTypes.basic) {
-        request(getUrl, function (error, response, body) {
+        request(opt, function (error, response, body) {
             console.error('error:', error);
             console.log('statusCode:', response && response.statusCode);
             var jsonBody = [];
@@ -382,14 +390,12 @@ function getData(options, cb) {
     }
     else if (authType == authTypes.bearer) {
 
-        var sendData = {
-            "username": login,
-            "password": password
-        }
+
         request({
             method: 'POST',
             url: authUrl,
-            json: sendData
+            json: parcel,
+            headers: authHeaders
         }, function (error, response, body) {
 
             console.error('error:', error);
@@ -397,7 +403,7 @@ function getData(options, cb) {
 
             bearerToken = body;
 
-            request(getUrl, function (error, response, body) {
+            request(opt, function (error, response, body) {
                 console.error('error:', error);
                 console.log('statusCode:', response && response.statusCode);
                 var jsonBody = [];
