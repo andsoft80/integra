@@ -3,6 +3,12 @@ var bcrypt = require('bcrypt');
 const request = require('request');
 var cookie = require('cookie');
 var cookies_js = require('js-cookie');
+const path = require('path');
+const axios = require('axios');
+var CM = require('cookie-manager');
+var cm = new CM();
+var objectPath = require("object-path");
+
 
 var express = require('express');
 var app = express();
@@ -12,6 +18,8 @@ app.use(express.json());
 var cors = require('cors');
 app.use(cors());
 app.options('*', cors());
+
+
 
 
 var port = process.env.PORT || 8080;
@@ -57,7 +65,7 @@ async function getTokenFromHeader(req) {
 }
 
 function check(req, res, next) {
-    if (req.url === '/signin') {
+    if (req.url === '/signin' || req.url === '/') {
         next();
     }
     else {
@@ -78,6 +86,10 @@ function check(req, res, next) {
 app.all('*', function (req, res, next) {
     // console.log(req.url);
     check(req, res, next);
+})
+
+app.get('/', function (req, res) {
+    res.sendFile(path.resolve('index.html'));
 })
 
 app.get('/departments', function (req, res) {
@@ -343,7 +355,7 @@ function getData(options, cb) {
     var headers = options.headers;
 
     var opt = {
-        
+
         url: getUrl,
         headers: headers,
         json: parcel
@@ -443,22 +455,24 @@ function getData(options, cb) {
             json: authParcel,
             headers: authHeaders
         }, function (error, response, body) {
-            console.error('authbody:', body);
+
             console.error('error:', error);
             console.log('statusCode:', response && response.statusCode);
             var h = cookie.parse(response.headers["set-cookie"].join(';'));
-            var t = response.headers["set-cookie"];
-            opt.headers = {};
-            opt.headers[".ASPXAUTH"] = h[".ASPXAUTH"];
-            opt.headers["BPMCSRF"] = h["BPMCSRF"];
-            // cookies_js.set('.ASPXAUTH', h[".ASPXAUTH"],{'path':'/', 'domain':'072988-crm-bundle.terrasoft.ru'});
-            // cookies_js.set('BPMCSRF', h["BPMCSRF"],{'path':'/', 'domain':'072988-crm-bundle.terrasoft.ru'});
+            var cookie_resp = "";
+            for (var i = 0; i < response.headers["set-cookie"].length; i++) {
+                cookie_resp = cookie_resp + response.headers["set-cookie"][i] + ';';
 
-            //opt.headers["Content-Type"] = "application/json";
+            }
+            opt.headers = {};
+            opt.headers["Cookie"] = cookie_resp;
+            opt.headers[options.csrfHeaderName] = h[options.csrfHeaderName];
+
+
+
             opt.method = "POST";
-            // console.log(cookies_js.get(".ASPXAUTH"));
-            console.log('opt:', opt);
-            
+
+
             request(opt, function (error, response, body) {
                 console.error('error:', error);
                 console.log('statusCode:', response && response.statusCode);
@@ -488,6 +502,8 @@ function getData(options, cb) {
 
 }
 
+
+
 var options = {
     getUrl: "https://reqres.in/api/users?page=1",
     authType: "none",
@@ -504,7 +520,7 @@ var options_creatio = {
     getUrl: "https://072988-crm-bundle.terrasoft.ru/0/dataservice/json/reply/SelectQuery",
     authType: authTypes.authCookies,
     isJSON: true,
-    dataProperty: "",
+    dataProperty: "rows",
     authUrl: "https://072988-crm-bundle.terrasoft.ru/ServiceModel/AuthService.svc/Login",
     login: "",
     password: "",
@@ -513,7 +529,7 @@ var options_creatio = {
         "UserPassword": "Professional1"
     },
     authHeaders: {
-        "ForceUseSession": false,
+        // "ForceUseSession": false,
         "Content-Type": "application/json"
     },
     parcel: {
@@ -521,20 +537,245 @@ var options_creatio = {
         "OperationType": 0,
 
         "AllColumns": true,
-        "Filters": {
-            "RootSchemaName": "Opportunity",
-            "FilterType": 1,
-            "ComparisonType": "GreaterOrEqual",
-            "LeftExpression": { "ExpressionType": 0, "ColumnPath": "CreatedOn" },
-            "RightExpression": { "ExpressionType": 1, "FunctionType": 1, "MacrosType": 10 }
+        // "Filters": {
+        //     "RootSchemaName": "Opportunity",
+        //     "FilterType": 1,
+        //     "ComparisonType": "GreaterOrEqual",
+        //     "LeftExpression": { "ExpressionType": 0, "ColumnPath": "CreatedOn" },
+        //     "RightExpression": { "ExpressionType": 1, "FunctionType": 1, "MacrosType": 10 }
 
+        // }
+
+    },
+    csrfHeaderName: "BPMCSRF"
+
+}
+
+
+function parseModel(parserData) {
+
+    var model = [];
+
+
+    for (var i = 0; i < Object.keys(parserData).length; i++) {
+        var modelObj = {};
+        var mainKey = Object.keys(parserData)[i];
+
+        var valueMainKey = parserData[mainKey];
+
+
+
+
+        if (typeof (valueMainKey) === "object") {
+            for (var j = 0; j < Object.keys(valueMainKey).length; j++) {
+                var modelObj = {};
+
+                modelObj.columnName = mainKey + "_" + Object.keys(valueMainKey)[j];
+                modelObj.columnPath = mainKey + "." + Object.keys(valueMainKey)[j];
+                modelObj.type = typeof (objectPath.get(parserData, modelObj.columnPath));
+
+                model.push(modelObj);
+
+
+            }
+            continue;
         }
+        console.log(mainKey + "-" + typeof (valueMainKey));
+        modelObj.columnName = mainKey;
+        modelObj.columnPath = mainKey;
+        modelObj.type = typeof (valueMainKey);
+
+        model.push(modelObj);
+
 
     }
 
+    console.log(model);
+    return model;
+
 }
+
+
+function putDataMSSQL(options) {
+    function insertRows() {
+
+        var sqlStr = 'insert into ' + options.tableName + " (";
+        for (var j = 0; j < options.model.length; j++) {
+            sqlStr = sqlStr + options.model[j].columnName + ','
+
+        }
+        sqlStr = sqlStr.substring(0, sqlStr.length - 1);
+        sqlStr = sqlStr + ") values ";
+
+
+        for (var i = 0; i < options.data.length; i++) {
+            var row = options.data[i];
+
+
+
+
+            sqlStr = sqlStr +"("
+            for (var j = 0; j < options.model.length; j++) {
+                var val = objectPath.get(row, options.model[j].columnPath);
+                if (val === false) { val = 0 };
+                if (val === true) { val = 1 };
+                sqlStr = sqlStr + "'" + val + "',"
+
+            }
+            sqlStr = sqlStr.substring(0, sqlStr.length - 1);
+            sqlStr = sqlStr + "),";
+            
+
+
+
+
+        }
+        sqlStr = sqlStr.substring(0, sqlStr.length - 1);
+        console.log(sqlStr);
+        mssql.connect().then((pool) => {
+            pool.query(sqlStr);
+        })
+            .then(result => {
+                // console.log("Table " + options.tableName + " created!");
+            })
+            .catch(error => {
+                console.log(error);
+            })
+        console.log("All data inserted!");
+    }
+
+    mssql.connect(options.db_config, err => {
+        if (err) {
+            throw err;
+        }
+        console.log("Connection to MSSQL Successful !");
+
+
+
+        var sqlStr = 'select * from ' + options.tableName;
+
+        new mssql.Request().query(sqlStr, function (err, result) {
+
+            if (err) {
+                var sqlStr = 'create table ' + options.tableName + "(";
+                for (var i = 0; i < options.model.length; i++) {
+                    var column = options.model[i];
+                    var typeC = '';
+                    if (column.type === 'number') {
+                        typeC = 'numeric(16,3)'
+                    }
+                    else if (column.type === 'string') {
+                        typeC = 'varchar(255)'
+                    }
+                    else if (column.type === 'boolean') {
+                        typeC = 'tinyint'
+                    }
+                    sqlStr = sqlStr + column.columnName + " " + typeC + " ";
+                    if (column.columnName === 'id' || column.columnName === 'ID' || column.columnName === '_id' || column.columnName === 'Id') {
+                        sqlStr = sqlStr + "NOT NULL PRIMARY KEY"
+                    }
+                    sqlStr = sqlStr + ","
+
+
+                }
+                sqlStr = sqlStr.substring(0, sqlStr.length - 1);
+                sqlStr = sqlStr + ")"
+                console.log(sqlStr);
+
+                mssql.connect().then((pool) => {
+                    pool.query(sqlStr);
+                })
+                    .then(result => {
+                        console.log("Table " + options.tableName + " created!");
+                        insertRows();
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    })
+
+
+
+
+            }
+            else {
+
+                insertRows();
+
+
+                // for (var i = 0; i < options.data.length; i++) {
+                //     var row = options.data[i];
+
+
+                //     var sqlStr = 'insert into ' + options.tableName + " (";
+                //     for (var j = 0; j < options.model.length; j++) {
+                //         sqlStr = sqlStr + options.model[j].columnName + ','
+
+                //     }
+                //     sqlStr = sqlStr.substring(0, sqlStr.length - 1);
+                //     sqlStr = sqlStr + ")";
+
+                //     sqlStr = sqlStr + " values (";
+                //     for (var j = 0; j < options.model.length; j++) {
+                //         var val = objectPath.get(row, options.model[j].columnPath);
+                //         if (val === false) { val = 0 };
+                //         if (val === true) { val = 1 };
+                //         sqlStr = sqlStr + "'" + val + "',"
+
+                //     }
+                //     sqlStr = sqlStr.substring(0, sqlStr.length - 1);
+                //     sqlStr = sqlStr + ")";
+                //     console.log(sqlStr);
+
+                //     mssql.connect().then((pool) => {
+                //         pool.query(sqlStr);
+                //     })
+                //         .then(result => {
+                //             // console.log("Table " + options.tableName + " created!");
+                //         })
+                //         .catch(error => {
+                //             console.log(error);
+                //         })
+
+
+                // }
+                // console.log("All data inserted!");
+
+            }
+
+        });
+    });
+
+}
+
 getData(options_creatio, function (data) {
 
-    console.log(data);
+
+
+    //console.log(data);
+    var model = parseModel(data[0]);
+    var options = {
+        db_config: {
+            "user": "test", //default is sa
+            "password": "Professional2",
+            "server": "localhost", // for local machine
+            "database": "company_dwh", // name of database
+            "options": {
+                "enableArithAbort": true
+            },
+            pool: {
+                max: 10,
+                min: 0,
+                idleTimeoutMillis: 30000
+            }
+
+        },
+        tableName: "opportunities",
+        model: model,
+        data: data
+
+    }
+    putDataMSSQL(options);
 
 });
+
+
