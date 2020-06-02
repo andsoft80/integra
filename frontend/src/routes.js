@@ -35,6 +35,9 @@ import NotificationsPage from "views/Notifications/Notifications.js";
 import UpgradeToPro from "views/UpgradeToPro/UpgradeToPro.js";
 // core components/views for RTL layout
 import RTLPage from "views/RTLPage/RTLPage.js";
+import BackupIcon from '@material-ui/icons/Backup';
+import StorageIcon from '@material-ui/icons/Storage';
+import TableListSrc from "views/TableList/TableListSrc.js";
 
 const dashboardRoutes = [
   {
@@ -43,6 +46,24 @@ const dashboardRoutes = [
     rtlName: "",
     icon: Dashboard,
     component: DashboardPage,
+    layout: "/admin"
+  },
+
+  {
+    path: "/src",
+    name: "Источники",
+    rtlName: "",
+    icon: BackupIcon,
+    component: TableListSrc,
+    layout: "/admin"
+  },
+
+  {
+    path: "/dest",
+    name: "Назначения",
+    rtlName: "",
+    icon: StorageIcon,
+    component: TableList,
     layout: "/admin"
   },
 

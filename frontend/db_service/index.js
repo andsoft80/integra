@@ -214,7 +214,7 @@ app.post('/signin', function (req, res) {
 function api_impl(req, res) {
     var tableName = req.params.tableName;
     var action = req.params.action;
-    var clientid = req.body.clientid;
+    //var clientid = req.body.clientid;
     var idName = 'id';
     var sqlStr = '';
     var id = '';
@@ -282,7 +282,8 @@ function api_impl(req, res) {
             sqlStr = "select * from " + tableName + " where " + idName + " = " + id;
         }
         else {
-            sqlStr = "select * from " + tableName + " where clientid = " + clientid;
+            //sqlStr = "select * from " + tableName + " where clientid = " + clientid;
+            sqlStr = "select * from " + tableName;
         }
 
 
