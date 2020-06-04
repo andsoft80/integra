@@ -267,6 +267,9 @@ export default function EnhancedTable(props) {
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
     const [editD, setEditDialog] = React.useState(props.edit);
     const [dialogTitle, setDialogTitle] = React.useState("");
+    const [dialogEditMode, setDialogEditMode] = React.useState("false");
+    const [editRow, setEditRow] = React.useState({});
+
 
     // const handleTitleNew = () => {
     //     setDialogTitle("Новая запись");
@@ -303,6 +306,8 @@ export default function EnhancedTable(props) {
             // alert(JSON.stringify(result));
             setDialogTitle("Редактирование записи");
             setEditDialog(true);
+            setEditRow(result[0]);
+            setDialogEditMode(true);
 
         }
 
@@ -313,6 +318,8 @@ export default function EnhancedTable(props) {
 
         setDialogTitle("Новая запись");
         setEditDialog(true);
+        setDialogEditMode(false);
+        setEditRow({});
 
 
     };
@@ -387,7 +394,7 @@ export default function EnhancedTable(props) {
                 <DialogTitle id="responsive-dialog-title">{dialogTitle}</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        <StepperSrc vertical = {fullScreen}/>
+                        <StepperSrc vertical = {fullScreen} editRow = {editRow}/>
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>

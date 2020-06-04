@@ -56,7 +56,7 @@ export default function TableList() {
     setEdit(true);
   }
 
-  axios.post(be_conf.server + '/table/processes/action/get', {}, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
+  axios.post(be_conf.server + '/table/sources/action/get', {}, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
   .then(function (response) {
 
     
@@ -105,6 +105,8 @@ export default function TableList() {
                   
                   { id: 'password', numeric: true, disablePadding: false, label: 'Basic пароль'},
                   { id: 'dataproperty', numeric: true, disablePadding: false, label: 'Свойство данных' },
+                  { id: 'csrfHeaderName', numeric: true, disablePadding: false, label: 'Название CSRF' },
+
                   // { id: 'parcel', numeric: true, disablePadding: false, label: 'Данные запроса' },
                   // { id: 'authParcel', numeric: true, disablePadding: false, label: 'Данные аутентификации' },
                   // { id: 'headers', numeric: true, disablePadding: false, label: 'Заголовки запроса' },

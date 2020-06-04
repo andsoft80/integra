@@ -6,6 +6,7 @@ import StepLabel from '@material-ui/core/StepLabel';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import TextField from '@material-ui/core/TextField';
+import MenuItem from '@material-ui/core/MenuItem';
 
 
 import AceEditor from "react-ace";
@@ -35,23 +36,77 @@ function getSteps() {
 //     setreqParcelVal(newValue);
 //   }
 
-function getStepContent(step,handleReqParcelVal,reqParcelVal) {
+function getStepContent(step,
+    handleReqParcelVal,
+    reqParcelVal,
+    handleAuthParcelVal,
+    authParcelVal,
+    handleReqHeaderVal,
+    reqHeaderVal,
+    handleAuthHeaderVal,
+    authHeaderVal,
+    editRow,
+    getUrl,
+    authUrl,
+    name,
+    handleGetUrl,
+    handleAuthUrl,
+    handleName,
+    authType,
+    handleAuthType    
+
+
+
+) {
+
     switch (step) {
         case 0:
             return (
                 <div style={{ margin: '20px' }}>
                     <h3>{"Настройки запроса"}</h3>
-                    <TextField id="name" label="Название источника" variant="filled" required helperText={"Название для дальнейшего выбора из списка"} size={"small"} fullWidth />
-                    <TextField id="getUrl" label="URL запроса" variant="filled" required helperText={"URL для получения данных"} size={"small"} fullWidth />
-                    <p>{"Данные для запрорса"}</p>
-                    <AceEditor
-                        mode="javascript"
-                        theme="github"
-                        onChange={handleReqParcelVal}
-                        name="ACE_DIV"
-                        editorProps={{ $blockScrolling: false }}
-                        value={reqParcelVal}
+                    <TextField
+                        id="name"
+                        name="name"
+                        label="Название источника"
+                        variant="filled"
+                        required
+                        helperText={"Название для дальнейшего выбора из списка"}
+                        size={"small"}
+                        fullWidth
+                        // defaultValue={editRow ? editRow.name : ""}
+                        value={name}
+                        onChange={handleName}
                     />
+                    <TextField
+                        id="getUrl"
+                        label="URL запроса"
+                        variant="filled"
+                        required
+                        helperText={"URL для получения данных"}
+                        size={"small"}
+                        fullWidth
+                        // defaultValue={editRow ? editRow.getUrl : ""}
+                        value={getUrl}
+                        onChange={handleGetUrl}
+                    />
+                    <p>{"Данные для запроса"}</p>
+                    <div style={{ border: "1px solid" }}>
+                        <AceEditor
+                            mode="javascript"
+                            theme="github"
+                            onChange={handleReqParcelVal}
+                            name="reqData"
+                            editorProps={{ $blockScrolling: false }}
+                            setOptions={{
+
+                            }}
+                            value={reqParcelVal}
+                            height={"300px"}
+                            width={"100%"}
+
+
+                        />
+                    </div>
 
                 </div>
 
@@ -59,10 +114,68 @@ function getStepContent(step,handleReqParcelVal,reqParcelVal) {
 
             );
         case 1:
-            return (
-                <div>
-                    <h3>{"Аутентификация"}</h3>
 
+            return (
+                <div style={{ margin: '20px' }}>
+                    <h3>{"Аутентификация"}</h3>
+                    <TextField
+                        id="authType"
+                        select
+                        required
+                        size={"small"}
+                        label="Тип"
+                        value={authType}
+                        onChange={handleAuthType}
+                        helperText="Выберите тип аутентификации"
+                        variant="filled"
+                        // width = "200"
+                    >
+                        
+                            <MenuItem key={"none"} value={"none"}>
+                                {"Без аутентификации"}
+                            </MenuItem>
+                            <MenuItem key={"basic"} value={"basic"}>
+                                {"Basic аутентификация"}
+                            </MenuItem>
+                            <MenuItem key={"bearer"} value={"bearer"}>
+                                {"Bearer аутентификация"}
+                            </MenuItem>
+                            <MenuItem key={"authCookies"} value={"authCookies"}>
+                                {"Header cookie аутентификация"}
+                            </MenuItem>
+                        
+                    </TextField>
+                    <TextField
+                        id="authUrl"
+                        label="URL аутентификации"
+                        variant="filled"
+                        required
+                        helperText={"URL для отправки запроса на аутентификацию"}
+                        size={"small"}
+                        fullWidth
+                        // defaultValue={editRow ? editRow.authUrl : ""}
+                        value={authUrl}
+                        onChange={handleAuthUrl}
+                    />
+                    {/* <TextField id="csrfHeaderName" label="csrfHeaderName" variant="filled" required helperText={"csrfHeaderName"} size={"small"} fullWidth defaultValue={editRow ? editRow.csrfHeaderName : ""} /> */}
+                    <p>{"Данные для запроса аутентификации"}</p>
+                    <div style={{ border: "1px solid" }}>
+                        <AceEditor
+                            mode="javascript"
+                            theme="github"
+                            onChange={handleAuthParcelVal}
+                            name="authData"
+                            editorProps={{ $blockScrolling: false }}
+                            setOptions={{
+
+                            }}
+                            value={authParcelVal}
+                            height={"300px"}
+                            width={"100%"}
+
+
+                        />
+                    </div>
                 </div>
 
 
@@ -97,10 +210,43 @@ export default function HorizontalLinearStepper(props) {
     const classes = useStyles();
     const [activeStep, setActiveStep] = React.useState(0);
     const [skipped, setSkipped] = React.useState(new Set());
-    const [reqParcelVal, setreqParcelVal] = React.useState("");
-    
+    const [reqParcelVal, setreqParcelVal] = React.useState(props.editRow.parcel);
+    const [authParcelVal, setAuthParcelVal] = React.useState(props.editRow.authParcel);
+    const [reqHeaderVal, setReqHeaderVal] = React.useState(props.editRow.headers);
+    const [authHeaderVal, setAuthHeaderVal] = React.useState(props.editRow.authHeaders);
+
+    const [getUrl, setGetUrl] = React.useState(props.editRow.getUrl ? props.editRow.getUrl : "");
+    const [authUrl, setAuthUrl] = React.useState(props.editRow.authUrl ? props.editRow.authUrl : "");
+    const [name, setName] = React.useState(props.editRow.name ? props.editRow.name : "");
+    const [authType, setAuthType] = React.useState(props.editRow.authType ? props.editRow.authType : "");
+
+    const handleAuthType = (e) => {
+        setAuthType(e.target.value);
+    }
+
+    const handleGetUrl = (e) => {
+        setGetUrl(e.target.value);
+    }
+    const handleAuthUrl = (e) => {
+        setAuthUrl(e.target.value);
+    }
+    const handleName = (e) => {
+
+        setName(e.target.value);
+    }
+
+
     const handleReqParcelVal = (val) => {
         setreqParcelVal(val);
+    }
+    const handleAuthParcelVal = (val) => {
+        setAuthParcelVal(val);
+    }
+    const handleReqHeaderVal = (val) => {
+        setReqHeaderVal(val);
+    }
+    const handleAuthHeaderVal = (val) => {
+        setAuthHeaderVal(val);
     }
 
 
@@ -117,6 +263,25 @@ export default function HorizontalLinearStepper(props) {
     };
 
     const handleNext = () => {
+
+        if (activeStep === 0) {
+            if (!document.getElementById("name").value || !document.getElementById("getUrl").value) {
+                alert("Заполните поля Название источника и URL запроса");
+                return;
+            }
+
+            try {
+
+                // код ...
+                JSON.parse(reqParcelVal)
+
+            } catch (err) {
+
+                alert("Ошибка в данных запроса: " + err);
+                return;
+
+            }
+        }
         let newSkipped = skipped;
         if (isStepSkipped(activeStep)) {
             newSkipped = new Set(newSkipped.values());
@@ -128,6 +293,7 @@ export default function HorizontalLinearStepper(props) {
     };
 
     const handleBack = () => {
+
         setActiveStep((prevActiveStep) => prevActiveStep - 1);
     };
 
@@ -181,7 +347,30 @@ export default function HorizontalLinearStepper(props) {
                     </div>
                 ) : (
                         <div>
-                            <Typography className={classes.instructions}>{getStepContent(activeStep, handleReqParcelVal,reqParcelVal)}</Typography>
+                            <Typography className={classes.instructions}>{
+                                getStepContent(
+                                    activeStep,
+                                    handleReqParcelVal,
+                                    reqParcelVal,
+                                    handleAuthParcelVal,
+                                    authParcelVal,
+                                    handleReqHeaderVal,
+                                    reqHeaderVal,
+                                    handleAuthHeaderVal,
+                                    authHeaderVal,
+                                    props.editRow,
+                                    getUrl,
+                                    authUrl,
+                                    name,
+                                    handleGetUrl,
+                                    handleAuthUrl,
+                                    handleName,
+                                    authType,
+                                    handleAuthType
+
+                                )
+                            }
+                            </Typography>
                             <div>
                                 <Button disabled={activeStep === 0} onClick={handleBack} className={classes.button}>
                                     Назад
