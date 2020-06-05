@@ -485,11 +485,11 @@ function getData(options, cb) {
                     jsonBody = JSON.parse(body);
                 }
                 if (dataProperty) {
-                    //console.log('data:', jsonBody["data"]);
+                    console.log('data:', jsonBody["data"]);
                     cb(jsonBody[dataProperty]);
                 }
                 else {
-                    //console.log('data:', jsonBody);
+                    console.log('data:', jsonBody);
                     cb(jsonBody);
                 }
             });
@@ -732,10 +732,12 @@ function putDataMSSQL(options, cb) {
 }
 
 
-
+getData(options_creatio, function(data){
+    
+})
 
 app.post('/getData', function (req, res) {
-
+    console.log(req.body);
     getData(req.body, function(data){
         res.send(data);
     })

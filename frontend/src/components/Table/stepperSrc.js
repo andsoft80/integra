@@ -7,6 +7,9 @@ import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import TextField from '@material-ui/core/TextField';
 import MenuItem from '@material-ui/core/MenuItem';
+import axios from 'axios';
+import be_conf from '../../be_config';
+import Authcontrol from './../../Authcontrol';
 
 
 import AceEditor from "react-ace";
@@ -53,7 +56,17 @@ function getStepContent(step,
     handleAuthUrl,
     handleName,
     authType,
-    handleAuthType    
+    handleAuthType,
+    login,
+    password,
+    handleLogin,
+    handlePassword,
+    dataProperty,
+    csrfHeaderName,
+    handleDataProperty,
+    handleCsrfHeaderName,
+    reqAnswer,
+    handleDataCheck
 
 
 
@@ -89,6 +102,24 @@ function getStepContent(step,
                         value={getUrl}
                         onChange={handleGetUrl}
                     />
+                    <p>{"Headers для запроса в виде JSON"}</p>
+                    <div style={{ border: "1px solid" }}>
+                        <AceEditor
+                            mode="javascript"
+                            theme="github"
+                            onChange={handleReqHeaderVal}
+                            name="headers"
+                            editorProps={{ $blockScrolling: false }}
+                            setOptions={{
+
+                            }}
+                            value={reqHeaderVal}
+                            height={"300px"}
+                            width={"100%"}
+
+
+                        />
+                    </div>
                     <p>{"Данные для запроса"}</p>
                     <div style={{ border: "1px solid" }}>
                         <AceEditor
@@ -128,22 +159,22 @@ function getStepContent(step,
                         onChange={handleAuthType}
                         helperText="Выберите тип аутентификации"
                         variant="filled"
-                        // width = "200"
+                    // width = "200"
                     >
-                        
-                            <MenuItem key={"none"} value={"none"}>
-                                {"Без аутентификации"}
-                            </MenuItem>
-                            <MenuItem key={"basic"} value={"basic"}>
-                                {"Basic аутентификация"}
-                            </MenuItem>
-                            <MenuItem key={"bearer"} value={"bearer"}>
-                                {"Bearer аутентификация"}
-                            </MenuItem>
-                            <MenuItem key={"authCookies"} value={"authCookies"}>
-                                {"Header cookie аутентификация"}
-                            </MenuItem>
-                        
+
+                        <MenuItem key={"none"} value={"none"}>
+                            {"Без аутентификации"}
+                        </MenuItem>
+                        <MenuItem key={"basic"} value={"basic"}>
+                            {"Basic аутентификация"}
+                        </MenuItem>
+                        <MenuItem key={"bearer"} value={"bearer"}>
+                            {"Bearer аутентификация"}
+                        </MenuItem>
+                        <MenuItem key={"authCookies"} value={"authCookies"}>
+                            {"Header cookie аутентификация"}
+                        </MenuItem>
+
                     </TextField>
                     <TextField
                         id="authUrl"
@@ -157,7 +188,50 @@ function getStepContent(step,
                         value={authUrl}
                         onChange={handleAuthUrl}
                     />
+                    <TextField
+                        id="login"
+                        label="Basic логин"
+                        variant="filled"
+                        required
+                        helperText={"Логин для basic аутентификации"}
+                        size={"small"}
+                        // fullWidth
+                        // defaultValue={editRow ? editRow.authUrl : ""}
+                        value={login}
+                        onChange={handleLogin}
+                    />
+                    <TextField
+                        style={{ marginLeft: "10px" }}
+                        id="password"
+                        label="Basic пароль"
+                        variant="filled"
+                        required
+                        helperText={"Пароль для basic аутентификации"}
+                        size={"small"}
+                        // fullWidth
+                        // defaultValue={editRow ? editRow.authUrl : ""}
+                        value={password}
+                        onChange={handlePassword}
+                    />
                     {/* <TextField id="csrfHeaderName" label="csrfHeaderName" variant="filled" required helperText={"csrfHeaderName"} size={"small"} fullWidth defaultValue={editRow ? editRow.csrfHeaderName : ""} /> */}
+                    <p>{"Headers для аутентификации в виде JSON"}</p>
+                    <div style={{ border: "1px solid" }}>
+                        <AceEditor
+                            mode="javascript"
+                            theme="github"
+                            onChange={handleAuthHeaderVal}
+                            name="authHeaders"
+                            editorProps={{ $blockScrolling: false }}
+                            setOptions={{
+
+                            }}
+                            value={authHeaderVal}
+                            height={"300px"}
+                            width={"100%"}
+
+
+                        />
+                    </div>
                     <p>{"Данные для запроса аутентификации"}</p>
                     <div style={{ border: "1px solid" }}>
                         <AceEditor
@@ -185,6 +259,32 @@ function getStepContent(step,
             return (
                 <div>
                     <h3>{"Дополнительные настройки"}</h3>
+                    <TextField
+                        // style={{ marginLeft: "10px" }}
+                        id="dataProperty"
+                        label="Свойство данных"
+                        variant="filled"
+                        required
+                        helperText={"Свойство в JSON ответе, с массивом данных"}
+                        size={"small"}
+                        // fullWidth
+                        // defaultValue={editRow ? editRow.authUrl : ""}
+                        value={dataProperty}
+                        onChange={handleDataProperty}
+                    />
+                    <TextField
+                        style={{ marginLeft: "10px" }}
+                        id="csrfHeaderName"
+                        label="Название CSRF"
+                        variant="filled"
+                        required
+                        helperText={"Название CSRF заголовка, для отправки с запросом"}
+                        size={"small"}
+                        // fullWidth
+                        // defaultValue={editRow ? editRow.authUrl : ""}
+                        value={csrfHeaderName}
+                        onChange={handleCsrfHeaderName}
+                    />
 
                 </div>
 
@@ -196,6 +296,29 @@ function getStepContent(step,
             return (
                 <div>
                     <h3>{"Проверка данных"}</h3>
+
+                    <Button color={"primary"} onClick={handleDataCheck}>
+                                    Проверить получение данных
+                    </Button>
+
+                    <div style={{ border: "1px solid" }}>
+                        <AceEditor
+                            mode="javascript"
+                            theme="github"
+                            // onChange={handleReqAnswer}
+                            name="reqAnswer"
+                            editorProps={{ $blockScrolling: false }}
+                            setOptions={{
+
+                            }}
+                            value={reqAnswer}
+                            height={"300px"}
+                            width={"100%"}
+
+
+                        />
+                    </div>
+
 
                 </div>
 
@@ -219,6 +342,54 @@ export default function HorizontalLinearStepper(props) {
     const [authUrl, setAuthUrl] = React.useState(props.editRow.authUrl ? props.editRow.authUrl : "");
     const [name, setName] = React.useState(props.editRow.name ? props.editRow.name : "");
     const [authType, setAuthType] = React.useState(props.editRow.authType ? props.editRow.authType : "");
+    const [login, setLogin] = React.useState(props.editRow.login ? props.editRow.login : "");
+    const [password, setPassword] = React.useState(props.editRow.password ? props.editRow.password : "");
+    const [dataProperty, setDataProperty] = React.useState(props.editRow.dataproperty ? props.editRow.dataproperty : "");
+    const [csrfHeaderName, setCsrfHeaderName] = React.useState(props.editRow.csrfHeaderName ? props.editRow.csrfHeaderName : "");
+    const [reqAnswer, setReqAnswer] = React.useState("");
+    const handleDataCheck = () => {
+        var reqStructure = {};
+        reqStructure.getUrl = getUrl;
+        reqStructure.authUrl = authUrl;
+        reqStructure.authType = authType;
+        reqStructure.login = login;
+        reqStructure.password = password;
+        reqStructure.dataProperty = dataProperty;
+        reqStructure.csrfHeaderName = csrfHeaderName;
+        reqStructure.authParcel = authParcelVal?JSON.parse(authParcelVal):{};
+        reqStructure.authHeaders = authHeaderVal?JSON.parse(authHeaderVal):{};
+        reqStructure.headers = reqHeaderVal?JSON.parse(reqHeaderVal):{};
+        reqStructure.parcel = reqParcelVal?JSON.parse(reqParcelVal):{};
+        reqStructure.isJSON = true;
+
+        // console.log(JSON.stringify(reqStructure));
+        // return;
+        axios.post(be_conf.server + '/getData', reqStructure, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
+        .then(function (response) {
+      
+          
+            setReqAnswer(response.data);
+      
+        })
+        
+    }
+
+
+    const handleDataProperty = (e) => {
+        setDataProperty(e.target.value);
+    }
+    const handleCsrfHeaderName = (e) => {
+        setCsrfHeaderName(e.target.value);
+    }
+    const handleLogin = (e) => {
+        setLogin(e.target.value);
+    }
+
+    const handlePassword = (e) => {
+        setPassword(e.target.value);
+    }
+
+
 
     const handleAuthType = (e) => {
         setAuthType(e.target.value);
@@ -269,17 +440,63 @@ export default function HorizontalLinearStepper(props) {
                 alert("Заполните поля Название источника и URL запроса");
                 return;
             }
+            if (reqParcelVal) {
+                try {
 
-            try {
+                    // код ...
+                    JSON.parse(reqParcelVal)
 
-                // код ...
-                JSON.parse(reqParcelVal)
+                } catch (err) {
 
-            } catch (err) {
+                    alert("Ошибка в данных запроса: " + err);
+                    return;
 
-                alert("Ошибка в данных запроса: " + err);
-                return;
+                }
+            }
+            if (reqHeaderVal) {
+                try {
 
+                    // код ...
+                    JSON.parse(reqHeaderVal)
+
+                } catch (err) {
+
+                    alert("Ошибка в headers запроса: " + err);
+                    return;
+
+                }
+            }
+        }
+        if (activeStep === 1) {
+            // if (!document.getElementById("name").value || !document.getElementById("getUrl").value) {
+            //     alert("Заполните поля Название источника и URL запроса");
+            //     return;
+            // }
+            if (authParcelVal) {
+                try {
+
+                    // код ...
+                    JSON.parse(authParcelVal)
+
+                } catch (err) {
+
+                    alert("Ошибка в данных аутентификации: " + err);
+                    return;
+
+                }
+            }
+            if (authHeaderVal) {
+                try {
+
+                    // код ...
+                    JSON.parse(authHeaderVal)
+
+                } catch (err) {
+
+                    alert("Ошибка в headers аутентификации: " + err);
+                    return;
+
+                }
             }
         }
         let newSkipped = skipped;
@@ -366,7 +583,18 @@ export default function HorizontalLinearStepper(props) {
                                     handleAuthUrl,
                                     handleName,
                                     authType,
-                                    handleAuthType
+                                    handleAuthType,
+                                    login,
+                                    password,
+                                    handleLogin,
+                                    handlePassword,
+                                    dataProperty,
+                                    csrfHeaderName,
+                                    handleDataProperty,
+                                    handleCsrfHeaderName,
+                                    reqAnswer,
+                                    handleDataCheck
+
 
                                 )
                             }

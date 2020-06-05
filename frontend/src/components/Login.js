@@ -65,8 +65,9 @@ const logIn = () =>{
   // alert(document.getElementById('email').value);
   var email = document.getElementById('email').value;
   var password = document.getElementById('password').value;
-
+  //alert('mama');
   if(email && password){
+    
     axios.post(be_conf.server + '/signin', {
       email: email,
       password: password
