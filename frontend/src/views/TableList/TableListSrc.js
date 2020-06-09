@@ -99,11 +99,14 @@ export default function TableList() {
                   { id: 'name', numeric: true, disablePadding: false, label: 'Название' },
                   { id: 'getUrl', numeric: true, disablePadding: false, label: 'URL источника' },
                   { id: 'authUrl', numeric: true, disablePadding: false, label: 'URL аутентификации'},
-                  { id: 'isJSON', numeric: true, disablePadding: false, label: 'Готовый JSON' , check:"check"},
+                  { id: 'pkName', numeric: true, disablePadding: false, label: 'Первичный ключ'},
+                  { id: 'tableName', numeric: true, disablePadding: false, label: 'Таблица назначения'},
+
+                  // { id: 'isJSON', numeric: true, disablePadding: false, label: 'Готовый JSON' , check:"check"},
                   { id: 'authType', numeric: true, disablePadding: false, label: 'Тип аутентификации' },
-                  { id: 'login', numeric: true, disablePadding: false, label: 'Basic пользователь' },
+                  // { id: 'login', numeric: true, disablePadding: false, label: 'Basic пользователь' },
                   
-                  { id: 'password', numeric: true, disablePadding: false, label: 'Basic пароль'},
+                  // { id: 'password', numeric: true, disablePadding: false, label: 'Basic пароль'},
                   { id: 'dataproperty', numeric: true, disablePadding: false, label: 'Свойство данных' },
                   { id: 'csrfHeaderName', numeric: true, disablePadding: false, label: 'Название CSRF' },
 

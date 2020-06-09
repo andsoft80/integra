@@ -66,7 +66,13 @@ function getStepContent(step,
     handleDataProperty,
     handleCsrfHeaderName,
     reqAnswer,
-    handleDataCheck
+    handleDataCheck,
+    isJSON,
+    handleIsJSON,
+    handlePkName,
+    pkName,
+    tableName,
+    handleTableName
 
 
 
@@ -180,7 +186,7 @@ function getStepContent(step,
                         id="authUrl"
                         label="URL аутентификации"
                         variant="filled"
-                        required
+
                         helperText={"URL для отправки запроса на аутентификацию"}
                         size={"small"}
                         fullWidth
@@ -192,7 +198,7 @@ function getStepContent(step,
                         id="login"
                         label="Basic логин"
                         variant="filled"
-                        required
+
                         helperText={"Логин для basic аутентификации"}
                         size={"small"}
                         // fullWidth
@@ -205,7 +211,7 @@ function getStepContent(step,
                         id="password"
                         label="Basic пароль"
                         variant="filled"
-                        required
+
                         helperText={"Пароль для basic аутентификации"}
                         size={"small"}
                         // fullWidth
@@ -264,7 +270,7 @@ function getStepContent(step,
                         id="dataProperty"
                         label="Свойство данных"
                         variant="filled"
-                        required
+
                         helperText={"Свойство в JSON ответе, с массивом данных"}
                         size={"small"}
                         // fullWidth
@@ -277,7 +283,7 @@ function getStepContent(step,
                         id="csrfHeaderName"
                         label="Название CSRF"
                         variant="filled"
-                        required
+
                         helperText={"Название CSRF заголовка, для отправки с запросом"}
                         size={"small"}
                         // fullWidth
@@ -285,6 +291,55 @@ function getStepContent(step,
                         value={csrfHeaderName}
                         onChange={handleCsrfHeaderName}
                     />
+                    <br />
+                    <TextField
+                        // style={{ marginLeft: "10px" }}
+                        id="pkName"
+                        label="Имя первичного ключа"
+                        variant="filled"
+                        required
+                        helperText={"Имя первичного ключа. Обычно id"}
+                        size={"small"}
+                        // fullWidth
+                        // defaultValue={editRow ? editRow.authUrl : ""}
+                        value={pkName}
+                        onChange={handlePkName}
+                    />
+                    <TextField
+                        style={{ marginLeft: "10px" }}
+                        id="tableName"
+                        label="Имя таблицы назначения"
+                        variant="filled"
+                        required
+                        helperText={"Имя таблицы для базы данных назначения"}
+                        size={"small"}
+                        // fullWidth
+                        // defaultValue={editRow ? editRow.authUrl : ""}
+                        value={tableName}
+                        onChange={handleTableName}
+                    />
+                    {/* <TextField
+                        id="isJSON"
+                        select
+                        required
+                        size={"small"}
+                        label="Формат ответа"
+                        value={isJSON}
+                        onChange={handleIsJSON}
+                        helperText="Выберите формат ответа на запрос данных "
+                        variant="filled"
+                        fullWidth
+                    >
+
+                        <MenuItem key={1} value={1}>
+                            {"JSON"}
+                        </MenuItem>
+                        <MenuItem key={0} value={0}>
+                            {"Строка"}
+                        </MenuItem>
+
+
+                    </TextField> */}
 
                 </div>
 
@@ -298,7 +353,7 @@ function getStepContent(step,
                     <h3>{"Проверка данных"}</h3>
 
                     <Button color={"primary"} onClick={handleDataCheck}>
-                                    Проверить получение данных
+                        Проверить получение данных
                     </Button>
 
                     <div style={{ border: "1px solid" }}>
@@ -341,12 +396,25 @@ export default function HorizontalLinearStepper(props) {
     const [getUrl, setGetUrl] = React.useState(props.editRow.getUrl ? props.editRow.getUrl : "");
     const [authUrl, setAuthUrl] = React.useState(props.editRow.authUrl ? props.editRow.authUrl : "");
     const [name, setName] = React.useState(props.editRow.name ? props.editRow.name : "");
-    const [authType, setAuthType] = React.useState(props.editRow.authType ? props.editRow.authType : "");
+    const [authType, setAuthType] = React.useState(props.editRow.authType ? props.editRow.authType : "none");
     const [login, setLogin] = React.useState(props.editRow.login ? props.editRow.login : "");
     const [password, setPassword] = React.useState(props.editRow.password ? props.editRow.password : "");
     const [dataProperty, setDataProperty] = React.useState(props.editRow.dataproperty ? props.editRow.dataproperty : "");
     const [csrfHeaderName, setCsrfHeaderName] = React.useState(props.editRow.csrfHeaderName ? props.editRow.csrfHeaderName : "");
+    const [isJSON, setIsJSON] = React.useState(props.editRow.isJSON ? props.editRow.isJSON : 1);
     const [reqAnswer, setReqAnswer] = React.useState("");
+    const [pkName, setPkName] = React.useState(props.editRow.pkName ? props.editRow.pkName : "");
+    const [tableName, setTableName] = React.useState(props.editRow.tableName ? props.editRow.tableName : "");
+
+    const handleTableName = (e) => {
+        setTableName(e.target.value);
+    }
+
+    const handlePkName = (e) => {
+        setPkName(e.target.value);
+    }
+
+
     const handleDataCheck = () => {
         var reqStructure = {};
         reqStructure.getUrl = getUrl;
@@ -356,25 +424,27 @@ export default function HorizontalLinearStepper(props) {
         reqStructure.password = password;
         reqStructure.dataProperty = dataProperty;
         reqStructure.csrfHeaderName = csrfHeaderName;
-        reqStructure.authParcel = authParcelVal?JSON.parse(authParcelVal):{};
-        reqStructure.authHeaders = authHeaderVal?JSON.parse(authHeaderVal):{};
-        reqStructure.headers = reqHeaderVal?JSON.parse(reqHeaderVal):{};
-        reqStructure.parcel = reqParcelVal?JSON.parse(reqParcelVal):{};
-        reqStructure.isJSON = true;
+        reqStructure.authParcel = authParcelVal ? JSON.parse(authParcelVal) : {};
+        reqStructure.authHeaders = authHeaderVal ? JSON.parse(authHeaderVal) : {};
+        reqStructure.headers = reqHeaderVal ? JSON.parse(reqHeaderVal) : {};
+        reqStructure.parcel = reqParcelVal ? JSON.parse(reqParcelVal) : {};
+        // reqStructure.isJSON = isJSON===0?false:true;
 
         // console.log(JSON.stringify(reqStructure));
         // return;
         axios.post(be_conf.server + '/getData', reqStructure, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
-        .then(function (response) {
-      
-          
-            setReqAnswer(response.data);
-      
-        })
-        
+            .then(function (response) {
+
+
+                setReqAnswer(JSON.stringify(response.data));
+
+            })
+
     }
 
-
+    const handleIsJSON = (e) => {
+        setIsJSON(e.target.value);
+    }
     const handleDataProperty = (e) => {
         setDataProperty(e.target.value);
     }
@@ -499,6 +569,95 @@ export default function HorizontalLinearStepper(props) {
                 }
             }
         }
+        if (activeStep === 2) {
+            if (!document.getElementById("pkName").value || !document.getElementById("tableName").value) {
+                alert("Заполните поля Имя первичного ключа и Имя таблицы назначения");
+                return;
+            }
+        }
+
+        if (activeStep === 3) {
+
+            if (reqAnswer === "\"\"") {
+                alert("Полученный ответ не является JSON массивом. Исправьте настройки запросов...");
+                return;
+
+            }
+
+            if (reqAnswer.indexOf("[{") !== 0) {
+                alert("Полученный ответ не является JSON массивом. Исправьте настройки запросов...");
+                return;
+
+            }
+
+
+
+            try {
+                var l = JSON.parse(reqAnswer);
+                var t = l[0];
+
+
+            }
+            catch (err) {
+                alert("Полученный ответ не является JSON массивом. Исправьте настройки запросов...");
+                return;
+            }
+            var reqStructure = {};
+            reqStructure.getUrl = getUrl;
+            reqStructure.authUrl = authUrl;
+            reqStructure.authType = authType;
+            reqStructure.login = login;
+            reqStructure.password = password;
+            reqStructure.dataProperty = dataProperty;
+            reqStructure.csrfHeaderName = csrfHeaderName;
+            reqStructure.authParcel = !authParcelVal ? "" : authParcelVal;
+            reqStructure.authHeaders = !authHeaderVal ? "" : authHeaderVal;
+            reqStructure.headers = !reqHeaderVal ? "" : reqHeaderVal;
+            reqStructure.parcel = !reqParcelVal ? "" : reqParcelVal;
+            reqStructure.name = name;
+            reqStructure.pkName = pkName;
+            reqStructure.tableName = tableName;
+
+
+
+
+            // alert(JSON.stringify(reqStructure));
+
+            if (JSON.stringify(props.editRow) !== "{}") {
+                reqStructure.id = props.editRow.id;
+
+                axios.post(be_conf.server + '/table/sources/action/put/', reqStructure, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
+                    .then(function (response) {
+
+                        // alert(JSON.stringify(response));
+
+                    })
+                    .catch((err) => {
+                        alert(err);
+                        return;
+                    })
+            }
+            else {
+                axios.post(be_conf.server + '/table/sources/action/post/', reqStructure, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
+                    .then(function (response) {
+                        // alert(JSON.stringify(response));
+
+
+
+                    })
+                    .catch((err) => {
+                        alert(err);
+                        return;
+                    })
+
+            }
+
+
+
+        }
+
+
+
         let newSkipped = skipped;
         if (isStepSkipped(activeStep)) {
             newSkipped = new Set(newSkipped.values());
@@ -556,7 +715,7 @@ export default function HorizontalLinearStepper(props) {
                 {activeStep === steps.length ? (
                     <div>
                         <Typography className={classes.instructions}>
-                            Все шаги завершены - можно сохранять...
+                            Данные успешно сохранены...
             </Typography>
                         <Button onClick={handleReset} className={classes.button}>
                             Повторить
@@ -593,7 +752,14 @@ export default function HorizontalLinearStepper(props) {
                                     handleDataProperty,
                                     handleCsrfHeaderName,
                                     reqAnswer,
-                                    handleDataCheck
+                                    handleDataCheck,
+                                    isJSON,
+                                    handleIsJSON,
+                                    handlePkName,
+                                    pkName,
+                                    tableName,
+                                    handleTableName
+
 
 
                                 )
@@ -620,7 +786,7 @@ export default function HorizontalLinearStepper(props) {
                                     onClick={handleNext}
                                     className={classes.button}
                                 >
-                                    {activeStep === steps.length - 1 ? 'Завершить' : 'Вперед'}
+                                    {activeStep === steps.length - 1 ? 'Завершить и сохранить' : 'Вперед'}
                                 </Button>
                             </div>
                         </div>

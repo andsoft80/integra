@@ -31,7 +31,9 @@ import PauseIcon from '@material-ui/icons/Pause';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
 import StepperSrc from './stepperSrc';
-
+import axios from 'axios';
+import be_conf from '../../be_config';
+import Authcontrol from './../../Authcontrol';
 
 
 
@@ -44,6 +46,8 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import { useTheme } from '@material-ui/core/styles';
 import { isConstructorDeclaration } from 'typescript';
+
+
 
 // function createData(name, calories, fat, carbs, protein) {
 //     return { name, calories, fat, carbs, protein };
@@ -205,7 +209,7 @@ const EnhancedTableToolbar = (props) => {
                                 <EditIcon />
                             </IconButton>
                         </Tooltip>
-                        <Tooltip title="Удалить">
+                        <Tooltip title="Удалить" onClick={props.delete}>
                             <IconButton aria-label="delete">
                                 <DeleteIcon />
                             </IconButton>
@@ -215,7 +219,7 @@ const EnhancedTableToolbar = (props) => {
 
                         <div style={{ display: 'flex' }}>
                             <Fab color="default" aria-label="add" onClick={props.create}>
-                                <AddIcon  />
+                                <AddIcon />
                             </Fab>
                             {/* <Tooltip title="Фильтры">
                                 <IconButton aria-label="filter list">
@@ -278,7 +282,7 @@ export default function EnhancedTable(props) {
     // const handleTitleEdit = () => {
     //     setDialogTitle("Редактирование записи");
     // };
-    
+
 
 
 
@@ -373,6 +377,20 @@ export default function EnhancedTable(props) {
         setDense(event.target.checked);
     };
 
+    const handleDelete = (e) => {
+
+        if (window.confirm("Удалить выбранные записи?")) {
+
+            for (var i = 0; i < selected.length; i++) {
+
+                axios.post(be_conf.server + '/table/sources/action/delete', { "id": selected[i] }, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
+                    .then(function (response) {
+
+                    })
+            }
+        }
+    };
+
     const isSelected = (name) => selected.indexOf(name) !== -1;
 
     const emptyRows = rowsPerPage - Math.min(rowsPerPage, props.data.length - page * rowsPerPage);
@@ -387,27 +405,27 @@ export default function EnhancedTable(props) {
                 aria-labelledby="responsive-dialog-title"
                 disableBackdropClick
                 disableEscapeKeyDown
-                maxWidth = "md"
+                maxWidth="md"
                 fullWidth
 
             >
                 <DialogTitle id="responsive-dialog-title">{dialogTitle}</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        <StepperSrc vertical = {fullScreen} editRow = {editRow}/>
+                        <StepperSrc vertical={fullScreen} editRow={editRow} />
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button autoFocus onClick={handleClose} color="primary">
+                    {/* <Button autoFocus onClick={handleClose} color="primary">
                         Сохранить
-                        </Button>
+                        </Button> */}
                     <Button onClick={handleClose} color="primary" autoFocus>
-                        Отменить
+                        Закрыть
                     </Button>
                 </DialogActions>
             </Dialog>
             <Paper className={classes.paper}>
-                <EnhancedTableToolbar numSelected={selected.length} edit={handleOpenDialog} create={handleCreateDialog} />
+                <EnhancedTableToolbar numSelected={selected.length} edit={handleOpenDialog} create={handleCreateDialog} delete={handleDelete} />
 
                 <TableContainer>
                     <Table
@@ -498,6 +516,7 @@ export default function EnhancedTable(props) {
                         </TableBody>
                     </Table>
                 </TableContainer>
+                           
                 <TablePagination
                     rowsPerPageOptions={[5, 10, 25]}
                     component="div"
@@ -507,6 +526,8 @@ export default function EnhancedTable(props) {
                     onChangePage={handleChangePage}
                     onChangeRowsPerPage={handleChangeRowsPerPage}
                 />
+               
+
             </Paper>
             <FormControlLabel
                 control={<Switch checked={dense} onChange={handleChangeDense} />}

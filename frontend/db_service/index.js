@@ -233,8 +233,11 @@ function api_impl(req, res) {
         sqlStr = sqlStr + ")";
 
         con.query(sqlStr, function (err, result) {
-            if (err)
-                res.end(JSON.stringify(err));
+            if (err){
+                errObj = {};
+                errObj.error = JSON.stringify(err);
+                res.end(JSON.stringify(errObj));
+            }
             res.end(JSON.stringify(result));
 
         });
@@ -252,8 +255,11 @@ function api_impl(req, res) {
         sqlStr = sqlStr + " where " + idName + " = " + id;
 
         con.query(sqlStr, function (err, result) {
-            if (err)
-                res.end(JSON.stringify(err));
+            if (err){
+                errObj = {};
+                errObj.error = JSON.stringify(err);
+                res.end(JSON.stringify(errObj));
+            }
             res.end(JSON.stringify(result));
 
         });
@@ -264,8 +270,11 @@ function api_impl(req, res) {
         sqlStr = "delete from " + tableName + " where " + idName + " = " + id;
 
         con.query(sqlStr, function (err, result) {
-            if (err)
-                res.end(JSON.stringify(err));
+            if (err){
+                errObj = {};
+                errObj.error = JSON.stringify(err);
+                res.end(JSON.stringify(errObj));
+            }
             res.end(JSON.stringify(result));
 
         });
@@ -288,8 +297,11 @@ function api_impl(req, res) {
 
 
         con.query(sqlStr, function (err, result) {
-            if (err)
-                res.end(JSON.stringify(err));
+            if (err){
+                errObj = {};
+                errObj.error = JSON.stringify(err);
+                res.end(JSON.stringify(errObj));
+            }
             res.end(JSON.stringify(result));
 
         });
@@ -298,7 +310,7 @@ function api_impl(req, res) {
     }
 }
 
-app.post('/table/:tableName/action/:action', function (req, res) {
+app.all('/table/:tableName/action/:action', function (req, res) {
 
     api_impl(req, res);
 
@@ -343,6 +355,7 @@ var authTypes = {
 
 function getData(options, cb) {
 
+
     var getUrl = options.getUrl;
     var authType = options.authType;
     var isJSON = options.isJSON;
@@ -364,18 +377,21 @@ function getData(options, cb) {
     }
 
     if (authType == authTypes.none) {
-
+        // console.log("mama");
 
         request(opt, function (error, response, body) {
             console.error('error:', error);
             console.log('statusCode:', response && response.statusCode);
             var jsonBody = [];
-            if (isJSON) {
+
+            try{
+                jsonBody = JSON.parse(body);
+
+            }
+            catch(err){
                 jsonBody = body;
             }
-            else {
-                jsonBody = JSON.parse(body);
-            }
+
             if (dataProperty) {
                 //console.log('data:', jsonBody["data"]);
                 cb(jsonBody["data"]);
@@ -391,11 +407,13 @@ function getData(options, cb) {
             console.error('error:', error);
             console.log('statusCode:', response && response.statusCode);
             var jsonBody = [];
-            if (isJSON) {
-                jsonBody = body;
-            }
-            else {
+
+            try{
                 jsonBody = JSON.parse(body);
+
+            }
+            catch(err){
+                jsonBody = body;
             }
             if (dataProperty) {
                 //console.log('data:', jsonBody["data"]);
@@ -413,7 +431,7 @@ function getData(options, cb) {
         request({
             method: 'POST',
             url: authUrl,
-            json: parcel,
+            json: authParcel,
             headers: authHeaders
         }, function (error, response, body) {
 
@@ -421,16 +439,19 @@ function getData(options, cb) {
             console.log('statusCode:', response && response.statusCode);
 
             bearerToken = body;
-
+            console.log(bearerToken);
+            // opt.method = "POST";
             request(opt, function (error, response, body) {
                 console.error('error:', error);
                 console.log('statusCode:', response && response.statusCode);
                 var jsonBody = [];
-                if (isJSON) {
-                    jsonBody = body;
-                }
-                else {
+
+                try{
                     jsonBody = JSON.parse(body);
+    
+                }
+                catch(err){
+                    jsonBody = body;
                 }
                 if (dataProperty) {
                     //console.log('data:', jsonBody["data"]);
@@ -478,11 +499,13 @@ function getData(options, cb) {
                 console.error('error:', error);
                 console.log('statusCode:', response && response.statusCode);
                 var jsonBody = [];
-                if (isJSON) {
-                    jsonBody = body;
-                }
-                else {
+
+                try{
                     jsonBody = JSON.parse(body);
+    
+                }
+                catch(err){
+                    jsonBody = body;
                 }
                 if (dataProperty) {
                     console.log('data:', jsonBody["data"]);
@@ -508,7 +531,7 @@ function getData(options, cb) {
 var options = {
     getUrl: "https://reqres.in/api/users?page=1",
     authType: "none",
-    isJSON: false,
+    // isJSON: false,
     dataProperty: "data",
     authUrl: "",
     login: "",
@@ -520,7 +543,7 @@ var options = {
 var options_creatio = {
     getUrl: "https://072988-crm-bundle.terrasoft.ru/0/dataservice/json/reply/SelectQuery",
     authType: authTypes.authCookies,
-    isJSON: true,
+    // isJSON: true,
     dataProperty: "rows",
     authUrl: "https://072988-crm-bundle.terrasoft.ru/ServiceModel/AuthService.svc/Login",
     login: "",
@@ -732,13 +755,14 @@ function putDataMSSQL(options, cb) {
 }
 
 
-getData(options_creatio, function(data){
+// getData(options_creatio, function(data){
     
-})
+// })
 
 app.post('/getData', function (req, res) {
     console.log(req.body);
     getData(req.body, function(data){
+        // console.log(data);
         res.send(data);
     })
 
