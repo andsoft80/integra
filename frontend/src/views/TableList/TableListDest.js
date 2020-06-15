@@ -8,13 +8,13 @@ import Table from "components/Table/Table.js";
 import Card from "components/Card/Card.js";
 import CardHeader from "components/Card/CardHeader.js";
 import CardBody from "components/Card/CardBody.js";
-import TableMySrc from "components/Table/myTableSrc.js";
+import TableMyDest from "components/Table/myTableDest.js";
 import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
 import PriorityHighIcon from '@material-ui/icons/PriorityHigh';
 import axios from 'axios';
 import be_conf from '../../be_config';
-import Authcontrol from './../../Authcontrol';
+import Authcontrol from '../../Authcontrol';
 
 const styles = {
   cardCategoryWhite: {
@@ -56,13 +56,13 @@ export default function TableList() {
     setEdit(true);
   }
 
-  axios.post(be_conf.server + '/table/sources/action/get', {}, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
+  axios.post(be_conf.server + '/table/destinations/action/get', {}, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
   .then(function (response) {
 
-    
     if(response.data!=="need_auth"){
       setData(response.data);
     } 
+    
 
   })
 
@@ -76,7 +76,7 @@ export default function TableList() {
         <Card plain>
           <CardHeader plain color="primary">
           <div style={{ display: 'flex' }}>
-                <div><h4 className={classes.cardTitleWhite}>Список источников</h4>
+                <div><h4 className={classes.cardTitleWhite}>Список хранилищ</h4>
 
 
 
@@ -94,28 +94,20 @@ export default function TableList() {
           </CardHeader>
           <CardBody>
 
-          <TableMySrc edit = {openEdit}
+          <TableMyDest edit = {openEdit}
 
                 columns={[
                   { id: 'id', numeric: true, disablePadding: false, label: 'Код' },
                   { id: 'name', numeric: true, disablePadding: false, label: 'Название' },
-                  { id: 'getUrl', numeric: true, disablePadding: false, label: 'URL источника' },
-                  { id: 'authUrl', numeric: true, disablePadding: false, label: 'URL аутентификации'},
-                  { id: 'pkName', numeric: true, disablePadding: false, label: 'Первичный ключ'},
-                  { id: 'tableName', numeric: true, disablePadding: false, label: 'Таблица назначения'},
-
-                  // { id: 'isJSON', numeric: true, disablePadding: false, label: 'Готовый JSON' , check:"check"},
-                  { id: 'authType', numeric: true, disablePadding: false, label: 'Тип аутентификации' },
-                  // { id: 'login', numeric: true, disablePadding: false, label: 'Basic пользователь' },
+                  { id: 'host', numeric: true, disablePadding: false, label: 'URL назначение' },
+                  { id: 'typeDB', numeric: true, disablePadding: false, label: 'Тип хранилища'},
+                  { id: 'dbName', numeric: true, disablePadding: false, label: 'Имя БД'},
+                  { id: 'login', numeric: true, disablePadding: false, label: 'Пользователь БД' },
                   
-                  // { id: 'password', numeric: true, disablePadding: false, label: 'Basic пароль'},
-                  { id: 'dataproperty', numeric: true, disablePadding: false, label: 'Свойство данных' },
-                  { id: 'csrfHeaderName', numeric: true, disablePadding: false, label: 'Название CSRF' },
+                  { id: 'password', numeric: true, disablePadding: false, label: 'Пароль БД'},
+                  // { id: 'options', numeric: true, disablePadding: false, label: 'Опции подключения'}
 
-                  // { id: 'parcel', numeric: true, disablePadding: false, label: 'Данные запроса' },
-                  // { id: 'authParcel', numeric: true, disablePadding: false, label: 'Данные аутентификации' },
-                  // { id: 'headers', numeric: true, disablePadding: false, label: 'Заголовки запроса' },
-                  // { id: 'authHeaders', numeric: true, disablePadding: false, label: 'Заголовки аутентификации' },
+
                 ]}
 
                 data={data}

@@ -768,3 +768,32 @@ app.post('/getData', function (req, res) {
 
     
 })
+app.post('/checkConnection', function (req, res) {
+
+    var conf = req.body;
+
+    
+    if(conf.typeDB ==="mssql"){
+        conf.pool = {
+            max: 10,
+            min: 0,
+            idleTimeoutMillis: 30000
+        };
+        conf.options = {
+            "enableArithAbort": true
+        };
+        // console.log(conf);
+        mssql.connect(conf, err => {
+            if (err) {
+               res.send(JSON.stringify(err));
+               mssql.close();
+            }
+            else{
+                res.send("Cоединение установлено успешно!");
+                mssql.close();
+            }
+        })
+        
+    }
+    
+})

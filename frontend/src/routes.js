@@ -38,6 +38,7 @@ import RTLPage from "views/RTLPage/RTLPage.js";
 import BackupIcon from '@material-ui/icons/Backup';
 import StorageIcon from '@material-ui/icons/Storage';
 import TableListSrc from "views/TableList/TableListSrc.js";
+import TableListDest from "views/TableList/TableListDest.js";
 
 const dashboardRoutes = [
   {
@@ -63,7 +64,7 @@ const dashboardRoutes = [
     name: "Назначения",
     rtlName: "",
     icon: StorageIcon,
-    component: TableList,
+    component: TableListDest,
     layout: "/admin"
   },
 

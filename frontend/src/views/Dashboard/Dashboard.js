@@ -64,14 +64,28 @@ export default  function Dashboard() {
   
   const [data, setData] = useState([]);
 
+  const handleUpdateData = () =>{
+    axios.post(be_conf.server + '/table/processes/action/get', {}, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
+    .then(function (response) {
+  
+      if(response.data!=="need_auth"){
+        setData(response.data);
+      } 
+      
+  
+    })
+    
+  }
 
-  axios.post(be_conf.server + '/table/processes/action/get', {}, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
-  .then(function (response) {
+
+  useEffect(() => {
+    handleUpdateData();
+    
 
     
-    setData(response.data);
+  },[]);
 
-  })
+
 
 
 
@@ -164,6 +178,7 @@ export default  function Dashboard() {
                 ]}
 
                 data={data}
+                updateData = {handleUpdateData}
 
               />
             </CardBody>

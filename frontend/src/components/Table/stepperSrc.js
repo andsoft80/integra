@@ -14,7 +14,7 @@ import Authcontrol from './../../Authcontrol';
 
 import AceEditor from "react-ace";
 
-import "ace-builds/src-noconflict/mode-javascript";
+import "ace-builds/src-noconflict/mode-json";
 import "ace-builds/src-noconflict/theme-github";
 
 const useStyles = makeStyles((theme) => ({
@@ -111,7 +111,7 @@ function getStepContent(step,
                     <p>{"Headers для запроса в виде JSON"}</p>
                     <div style={{ border: "1px solid" }}>
                         <AceEditor
-                            mode="javascript"
+                            mode="json"
                             theme="github"
                             onChange={handleReqHeaderVal}
                             name="headers"
@@ -129,7 +129,7 @@ function getStepContent(step,
                     <p>{"Данные для запроса"}</p>
                     <div style={{ border: "1px solid" }}>
                         <AceEditor
-                            mode="javascript"
+                            mode="json"
                             theme="github"
                             onChange={handleReqParcelVal}
                             name="reqData"
@@ -223,7 +223,7 @@ function getStepContent(step,
                     <p>{"Headers для аутентификации в виде JSON"}</p>
                     <div style={{ border: "1px solid" }}>
                         <AceEditor
-                            mode="javascript"
+                            mode="json"
                             theme="github"
                             onChange={handleAuthHeaderVal}
                             name="authHeaders"
@@ -241,7 +241,7 @@ function getStepContent(step,
                     <p>{"Данные для запроса аутентификации"}</p>
                     <div style={{ border: "1px solid" }}>
                         <AceEditor
-                            mode="javascript"
+                            mode="json"
                             theme="github"
                             onChange={handleAuthParcelVal}
                             name="authData"
@@ -358,7 +358,7 @@ function getStepContent(step,
 
                     <div style={{ border: "1px solid" }}>
                         <AceEditor
-                            mode="javascript"
+                            mode="json"
                             theme="github"
                             // onChange={handleReqAnswer}
                             name="reqAnswer"
@@ -436,7 +436,7 @@ export default function HorizontalLinearStepper(props) {
             .then(function (response) {
 
 
-                setReqAnswer(JSON.stringify(response.data));
+                setReqAnswer(JSON.stringify(response.data, null, '\t'));
 
             })
 

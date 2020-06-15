@@ -28,10 +28,14 @@ import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import ErrorIcon from '@material-ui/icons/Error';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import PauseIcon from '@material-ui/icons/Pause';
-
+import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
+import CheckBoxIcon from '@material-ui/icons/CheckBox';
+import StepperSrc from './stepperSrc';
 import axios from 'axios';
 import be_conf from '../../be_config';
 import Authcontrol from './../../Authcontrol';
+
+
 
 
 import Button from '@material-ui/core/Button';
@@ -45,6 +49,12 @@ import { useTheme } from '@material-ui/core/styles';
 import { isConstructorDeclaration } from 'typescript';
 import TextField from '@material-ui/core/TextField';
 import MenuItem from '@material-ui/core/MenuItem';
+
+
+
+import AceEditor from "react-ace";
+
+
 
 // function createData(name, calories, fat, carbs, protein) {
 //     return { name, calories, fat, carbs, protein };
@@ -176,55 +186,57 @@ const useToolbarStyles = makeStyles((theme) => ({
 const EnhancedTableToolbar = (props) => {
     const classes = useToolbarStyles();
     const { numSelected } = props;
+    const [editDialog, setEditDialog] = React.useState(false);
+
 
     return (
-        <Toolbar
-            className={clsx(classes.root, {
-                [classes.highlight]: numSelected > 0,
-            })}
-        >
-            {numSelected > 0 ? (
-                <Typography className={classes.title} color="inherit" variant="subtitle1" component="div">
-                    {numSelected} Выбрано
-                </Typography>
-            ) : (
-                    <Typography className={classes.title} variant="h6" id="tableTitle" component="div">
-                        Выберите записи
+        <div>
+
+            <Toolbar
+                className={clsx(classes.root, {
+                    [classes.highlight]: numSelected > 0,
+                })}
+            >
+
+                {numSelected > 0 ? (
+                    <Typography className={classes.title} color="inherit" variant="subtitle1" component="div">
+                        {numSelected} Выбрано
                     </Typography>
-                )}
+                ) : (
+                        <Typography className={classes.title} variant="h6" id="tableTitle" component="div">
+                            Выберите записи
+                        </Typography>
+                    )}
 
-            {numSelected > 0 ? (
-                <div style={{ display: 'flex' }}>
-                    <Tooltip title="Запустить" onClick={props.start}>
-                        <IconButton aria-label="delete">
-                            <PlayArrowIcon />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Остановить" onClick={props.pause}>
-                        <IconButton aria-label="delete">
-                            <PauseIcon />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Удалить" onClick={props.delete}>
-                        <IconButton aria-label="delete">
-                            <DeleteIcon />
-                        </IconButton>
-                    </Tooltip>
-                </div>
-            ) : (
-
+                {numSelected > 0 ? (
                     <div style={{ display: 'flex' }}>
-                        {/* <Tooltip title="Добавить">
-                            <IconButton aria-label="delete">
-                                <AddIcon />
+
+                        <Tooltip title="Редктировать" onClick={props.edit}>
+                            <IconButton aria-label="delete" >
+                                <EditIcon />
                             </IconButton>
-                        </Tooltip> */}
-                        <Fab color="default" aria-label="add" onClick={props.create}>
-                            <AddIcon />
-                        </Fab>
+                        </Tooltip>
+                        <Tooltip title="Удалить" onClick={props.delete}>
+                            <IconButton aria-label="delete">
+                                <DeleteIcon />
+                            </IconButton>
+                        </Tooltip>
                     </div>
-                )}
-        </Toolbar>
+                ) : (
+
+                        <div style={{ display: 'flex' }}>
+                            <Fab color="default" aria-label="add" onClick={props.create}>
+                                <AddIcon />
+                            </Fab>
+                            {/* <Tooltip title="Фильтры">
+                                <IconButton aria-label="filter list">
+                                    <FilterListIcon />
+                                </IconButton>
+                            </Tooltip> */}
+                        </div>
+                    )}
+            </Toolbar>
+        </div>
     );
 };
 
@@ -264,96 +276,46 @@ export default function EnhancedTable(props) {
     const [page, setPage] = React.useState(0);
     const [dense, setDense] = React.useState(false);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
-    const [editD, setEditDialog] = React.useState(false);
+    const [editD, setEditDialog] = React.useState(props.edit);
     const [dialogTitle, setDialogTitle] = React.useState("");
     const [dialogEditMode, setDialogEditMode] = React.useState("false");
     const [editRow, setEditRow] = React.useState({});
-    const [src, setSrc] = React.useState([]);
-    const [dest, setDest] = React.useState([]);
-    const [srcVal, setSrcVal] = React.useState("");
-    const [destVal, setDestVal] = React.useState("");
+    // const [options, setOptions] = React.useState("");
+    const [typeDB, setTypeDB] = React.useState("");
 
-
-
-    const handleStart =(e)=>{
-        for (var i = 0; i < selected.length; i++) {
-
-            axios.post(be_conf.server + '/table/processes/action/put', { "id": selected[i], "active":1 }, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
-                .then(function (response) {
-                    props.updateData();
-
-                })
-        }
-       
+    const handleTypeDB = (e) => {
+        setTypeDB(e.target.value);
     }
-
-    const handlePause =(e)=>{
-        for (var i = 0; i < selected.length; i++) {
-
-            axios.post(be_conf.server + '/table/processes/action/put', { "id": selected[i], "active":0 }, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
-                .then(function (response) {
-                    props.updateData();
-                })
-        }
-        
-    }
-
-    const handleSrcVal = (e) => {
-        setSrcVal(e.target.value);
-    }
-
-    const handleDestVal = (e) => {
-        setDestVal(e.target.value);
-    }
-
-
-
-
-
-
-
-    const theme = useTheme();
-    const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
     const handleSave = (e) => {
         var parcel = {};
+        parcel.typeDB = typeDB;
+        parcel.name = document.getElementById("name").value;
+        parcel.host = document.getElementById("host").value;
+        parcel.dbName = document.getElementById("dbName").value;
+        parcel.login = document.getElementById("login").value;
+        parcel.password = document.getElementById("password").value;
 
-        parcel.sourcename = document.getElementById("src").innerText;
-        parcel.sourceid = srcVal;
-        parcel.destinationname = document.getElementById("dest").innerText;
-        parcel.destinationid = destVal;
-        parcel.periodmin = document.getElementById("period").value;
-        parcel.active = 0;
-        parcel.success = 1;
-        parcel.error = "";
-        parcel.lasttime = "1900-01-01 00:00:00";
+        if (parcel.typeDB === "" ||
+        parcel.name === "" ||
+        parcel.host === "" ||
+        parcel.dbName === "" ||
+        parcel.login === "" ||
+        parcel.password === "") {
 
+        alert("Все поля обязательные!");
+        return;
 
-        
-
-
-        if (
-            parcel.sourceid === ""||
-            parcel.destinationid === ""||
-            parcel.periodmin === ""||
-            parcel.periodmin === "0"
-
-        ) {
-
-            alert("Все поля обязательные!");
-            return;
-
-        }
+    }
 
         if (JSON.stringify(editRow) !== "{}") {
             parcel.id = editRow.id;
 
-            axios.post(be_conf.server + '/table/processes/action/put/', parcel, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
+            axios.post(be_conf.server + '/table/destinations/action/put/', parcel, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
                 .then(function (response) {
 
-                    //alert(JSON.stringify(response));
+                    // alert(JSON.stringify(response));
                     handleClose();
-                    props.updateData();
 
                 })
                 .catch((err) => {
@@ -362,11 +324,10 @@ export default function EnhancedTable(props) {
                 })
         }
         else {
-            axios.post(be_conf.server + '/table/processes/action/post/', parcel, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
+            axios.post(be_conf.server + '/table/destinations/action/post/', parcel, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
                 .then(function (response) {
-                    alert(JSON.stringify(response));
+                    // alert(JSON.stringify(response));
                     handleClose();
-                    props.updateData();
 
 
                 })
@@ -379,14 +340,74 @@ export default function EnhancedTable(props) {
 
     }
 
+
+
+    const handleCheck = (e) => {
+        var parcel = {};
+
+        parcel.typeDB = typeDB;
+        parcel.name = document.getElementById("name").value;
+        parcel.server = document.getElementById("host").value;
+        parcel.database = document.getElementById("dbName").value;
+        parcel.user = document.getElementById("login").value;
+        parcel.password = document.getElementById("password").value;
+        // try{
+        //     parcel.options = JSON.parse(options);
+        // }
+        // catch(err){
+        //     alert("Ошибка формата JSON в опциях : "+err);
+        //     return;
+        // }
+
+        // alert(JSON.stringify(parcel));
+
+        if (parcel.typeDB === "" ||
+            parcel.name === "" ||
+            parcel.server === "" ||
+            parcel.database === "" ||
+            parcel.user === "" ||
+            parcel.password === "") {
+
+            alert("Все поля обязательные!");
+            return;
+
+        }
+
+        axios.post(be_conf.server + '/checkConnection', parcel, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
+            .then(function (response) {
+                alert(JSON.stringify(response.data));
+            })
+
+
+
+
+    }
+
+    // const handleOptions = (val) => {
+    //     setOptions(val);
+    // }
+    // const handleTitleNew = () => {
+    //     setDialogTitle("Новая запись");
+    // };
+
+    // const handleTitleEdit = () => {
+    //     setDialogTitle("Редактирование записи");
+    // };
+
+
+
+
+    const [open, setOpen] = React.useState(props.edit);
+
+
+    const theme = useTheme();
+    const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
+
     const handleClose = () => {
         setEditDialog(false);
-        setSrcVal("");
-        setDestVal("");
-
     };
 
-    const handleEditDialog = () => {
+    const handleOpenDialog = () => {
 
         if (selected.length > 1) {
             alert("Выберите тоько одну строку для редактирования!");
@@ -403,76 +424,24 @@ export default function EnhancedTable(props) {
             setEditRow(result[0]);
             setDialogEditMode(true);
             // setOptions(result[0].options);
-
+            setTypeDB(result[0].typeDB);
 
         }
 
     };
 
-    const getSrcDest = () => {
-        axios.post(be_conf.server + '/table/sources/action/get/', {}, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
-            .then(function (response) {
-
-                // alert(JSON.stringify(response));
-                if(response.data!=="need_auth"){
-                    setSrc(response.data);
-                  } 
-                
-
-
-            })
-            .catch((err) => {
-                alert(err);
-                return;
-            })
-
-        axios.post(be_conf.server + '/table/destinations/action/get/', {}, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
-            .then(function (response) {
-
-                if(response.data!=="need_auth"){
-                    setDest(response.data);
-                  } 
-
-                // alert(JSON.stringify(response));
-                
-
-            })
-            .catch((err) => {
-                alert(err);
-                return;
-            })
-
-    }
 
     const handleCreateDialog = () => {
-
-        getSrcDest();
-
 
         setDialogTitle("Новая запись");
         setEditDialog(true);
         setDialogEditMode(false);
         setEditRow({});
-
-
+        // setOptions("");
+        setTypeDB("mssql");
 
     };
 
-
-    const handleDelete = (e) => {
-
-        if (window.confirm("Удалить выбранные записи?")) {
-
-            for (var i = 0; i < selected.length; i++) {
-
-                axios.post(be_conf.server + '/table/processes/action/delete', { "id": selected[i] }, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
-                    .then(function (response) {
-                        props.updateData();
-
-                    })
-            }
-        }
-    };
 
     const handleRequestSort = (event, property) => {
         const isAsc = orderBy === property && order === 'asc';
@@ -522,12 +491,27 @@ export default function EnhancedTable(props) {
         setDense(event.target.checked);
     };
 
+    const handleDelete = (e) => {
+
+        if (window.confirm("Удалить выбранные записи?")) {
+
+            for (var i = 0; i < selected.length; i++) {
+
+                axios.post(be_conf.server + '/table/destinations/action/delete', { "id": selected[i] }, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
+                    .then(function (response) {
+
+                    })
+            }
+        }
+    };
+
     const isSelected = (name) => selected.indexOf(name) !== -1;
 
     const emptyRows = rowsPerPage - Math.min(rowsPerPage, props.data.length - page * rowsPerPage);
 
     return (
         <div className={classes.root}>
+
             <Dialog
                 fullScreen={fullScreen}
                 open={editD}
@@ -543,84 +527,119 @@ export default function EnhancedTable(props) {
                 <DialogContent>
                     <DialogContentText>
                         <TextField
-                            id="src"
-                            select
-                            required
-                            size={"small"}
-                            label="Источник"
-                            value={srcVal}
-                            onChange={handleSrcVal}
-                            // defaultValue={editRow.typeDB ? editRow.typeDB : "mssql"}
-                            helperText="Выберите источник"
+                            id="name"
+                            label="Название"
                             variant="filled"
+                            required
+                            helperText={"Название подключения"}
+                            size={"small"}
                             fullWidth
-                        // width = "200"
-                        >
-                            {
-                                src.map((s,key)=>{
-                                    return(
-                                        <MenuItem key={key} value={s.id}>
-                                            {s.name}
-                                        </MenuItem>
-                                        )
-                                    })
-                            
-                                }
+                            defaultValue={editRow.name ? editRow.name : ""}
+                        // value={authUrl}
+                        // onChange={handleAuthUrl}
+                        />
 
-
-                        </TextField>
-                        {/* <br/> */}
                         <TextField
-                            id="dest"
+                            id="host"
+                            label="URL назначения"
+                            variant="filled"
+                            required
+                            helperText={"Полный URL подключения к хранилищу"}
+                            size={"small"}
+                            fullWidth
+                            defaultValue={editRow.host ? editRow.host : ""}
+                        // value={authUrl}
+                        // onChange={handleAuthUrl}
+                        />
+                        <TextField
+                            id="typeDB"
                             select
                             required
                             size={"small"}
-                            label="Назначение"
-                            value={destVal}
-                            onChange={handleDestVal}
+                            label="Тип хранилища"
+                            value={typeDB}
+                            onChange={handleTypeDB}
                             // defaultValue={editRow.typeDB ? editRow.typeDB : "mssql"}
-                            helperText="Выберите назначение"
+                            helperText="Выберите тип хранилища"
                             variant="filled"
-                            fullWidth
                         // width = "200"
                         >
-                            {
-                                dest.map((s,key)=>{
-                                    return(
-                                        <MenuItem key={key} value={s.id}>
-                                            {s.name}
-                                        </MenuItem>
-                                        )
-                                    })
-                            
-                                }
+
+                            <MenuItem key={"mssql"} value={"mssql"}>
+                                {"MS SQL"}
+                            </MenuItem>
+                            <MenuItem key={"mysql"} value={"mysql"}>
+                                {"MySQL"}
+                            </MenuItem>
+                            <MenuItem key={"postres"} value={"postres"}>
+                                {"PostgreSQL"}
+                            </MenuItem>
 
 
                         </TextField>
                         <TextField
-                            id="period"
-                            // select
-                            required
-                            size={"small"}
-                            label="Периодичность в мин."
-                            // value={srcVal}
-                            // onChange={handleSrcVal}
-                            defaultValue={""}
-                            helperText="Укажите периодичность в минутах"
+                            id="dbName"
+                            label="Имя БД"
                             variant="filled"
-                            type = {"number"}
-                            // fullWidth
-                        // width = "200"
-                        >
+                            required
+                            helperText={"Название базы данных"}
+                            size={"small"}
+                            fullWidth
+                            defaultValue={editRow.dbName ? editRow.dbName : ""}
+                        // value={authUrl}
+                        // onChange={handleAuthUrl}
+                        />
+                        <TextField
+                            id="login"
+                            label="Логин БД"
+                            variant="filled"
+                            required
+                            helperText={"Логин базы данных"}
+                            size={"small"}
+                            fullWidth
+                            defaultValue={editRow.login ? editRow.login : ""}
+                        // value={authUrl}
+                        // onChange={handleAuthUrl}
+                        />
+                        <TextField
+                            id="password"
+                            label="Пароль БД"
+                            variant="filled"
+                            required
+                            helperText={"Пароль базы данных"}
+                            size={"small"}
+                            fullWidth
+                            defaultValue={editRow.password ? editRow.password : ""}
+                        // value={authUrl}
+                        // onChange={handleAuthUrl}
+                        />
 
-                        </TextField>
+                        {/* <p>{"Опции подключения"}</p>
+                    <div style={{ border: "1px solid" }}>
+                        <AceEditor
+                            mode="javascript"
+                            theme="github"
+                            onChange={handleOptions}
+                            name="authData"
+                            editorProps={{ $blockScrolling: false }}
+                            
+                            setOptions={{
+
+                            }}
+                            value={options}
+                            height={"300px"}
+                            width={"100%"}
 
 
+                        />
+                    </div> */}
 
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-
+                    <Button autoFocus onClick={handleCheck} color="primary">
+                        Проверить соединение
+                        </Button>
                     <Button autoFocus onClick={handleSave} color="primary">
                         Сохранить
                         </Button>
@@ -630,7 +649,8 @@ export default function EnhancedTable(props) {
                 </DialogActions>
             </Dialog>
             <Paper className={classes.paper}>
-                <EnhancedTableToolbar numSelected={selected.length} delete={handleDelete} create={handleCreateDialog} edit={handleEditDialog} start = {handleStart} pause = {handlePause}/>
+                <EnhancedTableToolbar numSelected={selected.length} edit={handleOpenDialog} create={handleCreateDialog} delete={handleDelete} />
+
                 <TableContainer>
                     <Table
                         className={classes.table}
@@ -681,8 +701,8 @@ export default function EnhancedTable(props) {
                                                             column.check === "check"
                                                                 ?
                                                                 row[column.id] === 1
-                                                                    ? <CheckCircleIcon color="action" />
-                                                                    : <ErrorIcon color="secondary" />
+                                                                    ? <CheckBoxIcon color="inherit" />
+                                                                    : <CheckBoxOutlineBlankIcon color="inherit" />
 
 
 
@@ -720,6 +740,7 @@ export default function EnhancedTable(props) {
                         </TableBody>
                     </Table>
                 </TableContainer>
+
                 <TablePagination
                     rowsPerPageOptions={[5, 10, 25]}
                     component="div"
@@ -729,11 +750,13 @@ export default function EnhancedTable(props) {
                     onChangePage={handleChangePage}
                     onChangeRowsPerPage={handleChangeRowsPerPage}
                 />
+
+
             </Paper>
             <FormControlLabel
                 control={<Switch checked={dense} onChange={handleChangeDense} />}
                 label="Уплотнить строки"
             />
-        </div>
+        </div >
     );
 }
