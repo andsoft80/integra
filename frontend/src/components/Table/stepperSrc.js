@@ -437,10 +437,13 @@ export default function HorizontalLinearStepper(props) {
 
 
                 setReqAnswer(JSON.stringify(response.data, null, '\t'));
+                 //setReqAnswer(JSON.stringify(response.data));
 
             })
 
     }
+
+    
 
     const handleIsJSON = (e) => {
         setIsJSON(e.target.value);
@@ -584,21 +587,23 @@ export default function HorizontalLinearStepper(props) {
 
             }
 
-            if (reqAnswer.indexOf("[{") !== 0) {
-                alert("Полученный ответ не является JSON массивом. Исправьте настройки запросов...");
-                return;
 
-            }
 
 
 
             try {
+                
                 var l = JSON.parse(reqAnswer);
-                var t = l[0];
+                
+                if(reqAnswer.trim().indexOf("[")!==0){
+                    alert("Полученный ответ не является JSON массивом. Исправьте настройки запросов...");
+                    return;
+                }
 
 
             }
             catch (err) {
+                // alert(err);
                 alert("Полученный ответ не является JSON массивом. Исправьте настройки запросов...");
                 return;
             }

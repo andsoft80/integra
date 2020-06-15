@@ -294,6 +294,7 @@ export default function EnhancedTable(props) {
 
     const handleClose = () => {
         setEditDialog(false);
+        props.updateData();
     };
 
     const handleOpenDialog = () => {
@@ -385,6 +386,7 @@ export default function EnhancedTable(props) {
 
                 axios.post(be_conf.server + '/table/sources/action/delete', { "id": selected[i] }, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
                     .then(function (response) {
+                        props.updateData();
 
                     })
             }

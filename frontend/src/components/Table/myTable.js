@@ -364,7 +364,7 @@ export default function EnhancedTable(props) {
         else {
             axios.post(be_conf.server + '/table/processes/action/post/', parcel, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
                 .then(function (response) {
-                    alert(JSON.stringify(response));
+                    // alert(JSON.stringify(response));
                     handleClose();
                     props.updateData();
 

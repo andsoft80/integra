@@ -52,19 +52,33 @@ export default function TableList() {
   const [data, setData] = useState([]);
   const [openEdit, setEdit] = useState(false);
 
+
+  const handleUpdateData = () =>{
+    axios.post(be_conf.server + '/table/sources/action/get', {}, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
+    .then(function (response) {
+  
+      
+      if(response.data!=="need_auth"){
+        setData(response.data);
+      } 
+  
+    })
+    
+  }
+
+
+  useEffect(() => {
+    handleUpdateData();
+    
+
+    
+  },[]);
+
   const handleEdit = () =>{
     setEdit(true);
   }
 
-  axios.post(be_conf.server + '/table/sources/action/get', {}, { headers: { "Authorization": 'Bearer ' + Authcontrol.getToken() } })
-  .then(function (response) {
 
-    
-    if(response.data!=="need_auth"){
-      setData(response.data);
-    } 
-
-  })
 
 
 
@@ -94,7 +108,7 @@ export default function TableList() {
           </CardHeader>
           <CardBody>
 
-          <TableMySrc edit = {openEdit}
+          <TableMySrc edit = {openEdit} updateData = {handleUpdateData}
 
                 columns={[
                   { id: 'id', numeric: true, disablePadding: false, label: 'Код' },
