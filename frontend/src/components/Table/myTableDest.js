@@ -287,7 +287,7 @@ export default function EnhancedTable(props) {
         setTypeDB(e.target.value);
     }
 
-    const handleSave = (e) => {
+    const handleSave = (e) => { 
         var parcel = {};
         parcel.typeDB = typeDB;
         parcel.name = document.getElementById("name").value;
