@@ -795,5 +795,28 @@ app.post('/checkConnection', function (req, res) {
         })
         
     }
+    if(conf.typeDB ==="mysql"){
+
+        var conf = req.body;
+        var mysql      = require('mysql');
+        var connection = mysql.createConnection(conf);
+        
+        
+        connection.connect(function(err) {
+            if (err) {
+                res.send(JSON.stringify(err));
+              return;
+            }
+           
+            res.send("Cоединение установлено успешно!");
+          });
+         
+
+         
+        connection.end();
+
+
+        
+    }
     
 })
