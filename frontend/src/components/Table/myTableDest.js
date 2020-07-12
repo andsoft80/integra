@@ -574,7 +574,7 @@ export default function EnhancedTable(props) {
                             <MenuItem key={"mysql"} value={"mysql"}>
                                 {"MySQL"}
                             </MenuItem>
-                            <MenuItem key={"postres"} value={"postres"}>
+                            <MenuItem key={"postres"} value={"pgsql"}>
                                 {"PostgreSQL"}
                             </MenuItem>
 

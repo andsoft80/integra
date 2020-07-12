@@ -26,6 +26,7 @@ var port = process.env.PORT || 8080;
 
 var mysql = require('mysql');
 var mssql = require('mssql');
+const { Pool, Client } = require('pg');
 
 
 var config = require('./db_config');
@@ -233,7 +234,7 @@ function api_impl(req, res) {
         sqlStr = sqlStr + ")";
 
         con.query(sqlStr, function (err, result) {
-            if (err){
+            if (err) {
                 errObj = {};
                 errObj.error = JSON.stringify(err);
                 res.end(JSON.stringify(errObj));
@@ -255,7 +256,7 @@ function api_impl(req, res) {
         sqlStr = sqlStr + " where " + idName + " = " + id;
 
         con.query(sqlStr, function (err, result) {
-            if (err){
+            if (err) {
                 errObj = {};
                 errObj.error = JSON.stringify(err);
                 res.end(JSON.stringify(errObj));
@@ -270,7 +271,7 @@ function api_impl(req, res) {
         sqlStr = "delete from " + tableName + " where " + idName + " = " + id;
 
         con.query(sqlStr, function (err, result) {
-            if (err){
+            if (err) {
                 errObj = {};
                 errObj.error = JSON.stringify(err);
                 res.end(JSON.stringify(errObj));
@@ -297,7 +298,7 @@ function api_impl(req, res) {
 
 
         con.query(sqlStr, function (err, result) {
-            if (err){
+            if (err) {
                 errObj = {};
                 errObj.error = JSON.stringify(err);
                 res.end(JSON.stringify(errObj));
@@ -384,11 +385,11 @@ function getData(options, cb) {
             console.log('statusCode:', response && response.statusCode);
             var jsonBody = [];
 
-            try{
+            try {
                 jsonBody = JSON.parse(body);
 
             }
-            catch(err){
+            catch (err) {
                 jsonBody = body;
             }
 
@@ -408,11 +409,11 @@ function getData(options, cb) {
             console.log('statusCode:', response && response.statusCode);
             var jsonBody = [];
 
-            try{
+            try {
                 jsonBody = JSON.parse(body);
 
             }
-            catch(err){
+            catch (err) {
                 jsonBody = body;
             }
             if (dataProperty) {
@@ -446,11 +447,11 @@ function getData(options, cb) {
                 console.log('statusCode:', response && response.statusCode);
                 var jsonBody = [];
 
-                try{
+                try {
                     jsonBody = JSON.parse(body);
-    
+
                 }
-                catch(err){
+                catch (err) {
                     jsonBody = body;
                 }
                 if (dataProperty) {
@@ -500,11 +501,11 @@ function getData(options, cb) {
                 console.log('statusCode:', response && response.statusCode);
                 var jsonBody = [];
 
-                try{
+                try {
                     jsonBody = JSON.parse(body);
-    
+
                 }
-                catch(err){
+                catch (err) {
                     jsonBody = body;
                 }
                 if (dataProperty) {
@@ -596,10 +597,10 @@ function parseModel(parserData) {
 
                 modelObj.columnName = mainKey + "_" + Object.keys(valueMainKey)[j];
                 modelObj.columnPath = mainKey + "." + Object.keys(valueMainKey)[j];
-                if(modelObj.columnPath.indexOf('date')>-1 || modelObj.columnPath.indexOf('Date')>-1 || modelObj.columnPath.indexOf('CreatedOn')>-1 || modelObj.columnPath.indexOf('createdon')>-1 || modelObj.columnPath.indexOf('ModifiedOn')>-1 || modelObj.columnPath.indexOf('modifiedon')>-1){
+                if (modelObj.columnPath.indexOf('date') > -1 || modelObj.columnPath.indexOf('Date') > -1 || modelObj.columnPath.indexOf('CreatedOn') > -1 || modelObj.columnPath.indexOf('createdon') > -1 || modelObj.columnPath.indexOf('ModifiedOn') > -1 || modelObj.columnPath.indexOf('modifiedon') > -1) {
                     modelObj.type = 'date';
                 }
-                else{
+                else {
                     modelObj.type = typeof (objectPath.get(parserData, modelObj.columnPath));
                 }
 
@@ -612,12 +613,12 @@ function parseModel(parserData) {
         console.log(mainKey + "-" + typeof (valueMainKey));
         modelObj.columnName = mainKey;
         modelObj.columnPath = mainKey;
-        
 
-        if(modelObj.columnPath.indexOf('date')>-1 || modelObj.columnPath.indexOf('Date')>-1 || modelObj.columnPath.indexOf('CreatedOn')>-1 || modelObj.columnPath.indexOf('createdon')>-1 || modelObj.columnPath.indexOf('ModifiedOn')>-1 || modelObj.columnPath.indexOf('modifiedon')>-1){
+
+        if (modelObj.columnPath.indexOf('date') > -1 || modelObj.columnPath.indexOf('Date') > -1 || modelObj.columnPath.indexOf('CreatedOn') > -1 || modelObj.columnPath.indexOf('createdon') > -1 || modelObj.columnPath.indexOf('ModifiedOn') > -1 || modelObj.columnPath.indexOf('modifiedon') > -1) {
             modelObj.type = 'date';
         }
-        else{
+        else {
             modelObj.type = typeof (valueMainKey);
         }
 
@@ -655,7 +656,7 @@ function putDataMSSQL(options, cb) {
                 var val = objectPath.get(row, options.model[j].columnPath);
                 if (val === false) { val = 0 };
                 if (val === true) { val = 1 };
-                if(typeof val === "object") {val = JSON.stringify(val); val = val.replace("'", "");};
+                if (typeof val === "object") { val = JSON.stringify(val); val = val.replace("'", ""); };
                 sqlStr = sqlStr + "'" + val + "',"
 
             }
@@ -680,7 +681,7 @@ function putDataMSSQL(options, cb) {
             .catch(error => {
                 console.log(error);
             })
-            .finally(()=>{
+            .finally(() => {
                 cb();
             })
         //console.log("All data inserted!");
@@ -756,24 +757,25 @@ function putDataMSSQL(options, cb) {
 
 
 // getData(options_creatio, function(data){
-    
+
 // })
 
 app.post('/getData', function (req, res) {
     console.log(req.body);
-    getData(req.body, function(data){
+    getData(req.body, function (data) {
         // console.log(data);
         res.send(data);
     })
 
-    
+
 })
 app.post('/checkConnection', function (req, res) {
 
     var conf = req.body;
+    console.log(conf);
 
-    
-    if(conf.typeDB ==="mssql"){
+
+    if (conf.typeDB === "mssql") {
         conf.pool = {
             max: 10,
             min: 0,
@@ -785,38 +787,111 @@ app.post('/checkConnection', function (req, res) {
         // console.log(conf);
         mssql.connect(conf, err => {
             if (err) {
-               res.send(JSON.stringify(err));
-               mssql.close();
+                res.send(JSON.stringify(err));
+                mssql.close();
             }
-            else{
+            else {
                 res.send("Cоединение установлено успешно!");
                 mssql.close();
             }
         })
-        
+
     }
-    if(conf.typeDB ==="mysql"){
+    if (conf.typeDB === "mysql") {
 
         var conf = req.body;
-        var mysql      = require('mysql');
+        var mysql = require('mysql');
         var connection = mysql.createConnection(conf);
-        
-        
-        connection.connect(function(err) {
+
+
+        connection.connect(function (err) {
             if (err) {
                 res.send(JSON.stringify(err));
-              return;
+                return;
             }
-           
-            res.send("Cоединение установлено успешно!");
-          });
-         
 
-         
+            res.send("Cоединение установлено успешно!");
+        });
+
+
+
         connection.end();
 
 
-        
+
     }
-    
+    if (conf.typeDB === "pgsql") {
+
+        var conf = req.body;
+        var pg_conf = {};
+        pg_conf.host = conf.server;
+        pg_conf.user = conf.user;
+        pg_conf.password = conf.password;
+        pg_conf.database = conf.database;
+
+
+
+        const pool = new Pool(pg_conf);
+        pool.query('SELECT NOW()', (err, result) => {
+            if (err) {
+                res.send(JSON.stringify(err));
+                return;
+            }
+
+            res.send("Cоединение установлено успешно!");
+            pool.end();
+        })
+
+
+
+
+
+
+    }
+
 })
+
+
+function transferData(processObj) {
+
+    var lastTimeMilliSec = Date.parse(processObj.lasttime);
+    var currTime = new Date();
+    var currTimeMySQL = currTime.toISOString().slice(0, 19).replace('T', ' ');
+    var currTimeMilliSec = currTime.getTime(); 
+    var period = processObj.periodmin * 60000;//milliseconds
+    if (currTimeMilliSec - lastTimeMilliSec >= period) {
+        console.log('started ' + processObj.id);
+        var sqlStr = "update processes set lasttime = '"+currTimeMySQL+"' where id = "+processObj.id;
+        con.query(sqlStr, function (err, result) {
+            if (err) {
+                console.log(err);
+            }
+
+
+        });
+
+    }
+
+}
+
+setInterval(() => {
+
+
+
+
+
+}, 2000);
+
+var sqlStr = "select * from processes";
+con.query(sqlStr, function (err, result) {
+    if (err) {
+        console.log(err);
+    }
+    for (var i = 0; i < result.length; i++) {
+        var processObj = result[i];
+        transferData(processObj)
+
+    }
+
+
+});

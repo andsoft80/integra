@@ -345,6 +345,17 @@ export default function EnhancedTable(props) {
 
         }
 
+        if (
+
+            parcel.periodmin < 0
+
+        ) {
+
+            alert("Перионд должен быть больше нуля!");
+            return;
+
+        }
+
         if (JSON.stringify(editRow) !== "{}") {
             parcel.id = editRow.id;
 
@@ -609,6 +620,7 @@ export default function EnhancedTable(props) {
                             helperText="Укажите периодичность в минутах"
                             variant="filled"
                             type = {"number"}
+                            
                             // fullWidth
                         // width = "200"
                         >
