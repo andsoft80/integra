@@ -360,7 +360,7 @@ function getData(options, cb) {
     var getUrl = options.getUrl;
     var authType = options.authType;
     var isJSON = options.isJSON;
-    var dataProperty = options.dataProperty;
+    var dataProperty = options.dataproperty;
     var authUrl = options.authUrl;
     var login = options.login;
     var password = options.password;
@@ -545,7 +545,7 @@ var options_creatio = {
     getUrl: "https://072988-crm-bundle.terrasoft.ru/0/dataservice/json/reply/SelectQuery",
     authType: authTypes.authCookies,
     // isJSON: true,
-    dataProperty: "rows",
+    dataproperty: "rows",
     authUrl: "https://072988-crm-bundle.terrasoft.ru/ServiceModel/AuthService.svc/Login",
     login: "",
     password: "",
@@ -633,42 +633,97 @@ function parseModel(parserData) {
 }
 
 
+function buildInsertQuery(options){
+    var sqlStr = 'insert into ' + options.tableName + " (";
+    for (var j = 0; j < options.model.length; j++) {
+        sqlStr = sqlStr + options.model[j].columnName + ','
+
+    }
+    sqlStr = sqlStr.substring(0, sqlStr.length - 1);
+    sqlStr = sqlStr + ") values ";
+
+
+    for (var i = 0; i < options.data.length; i++) {
+        var row = options.data[i];
+
+
+
+
+        sqlStr = sqlStr + "("
+        for (var j = 0; j < options.model.length; j++) {
+            var val = objectPath.get(row, options.model[j].columnPath);
+            if (val === false) { val = 0 };
+            if (val === true) { val = 1 };
+            if (typeof val === "object") { val = JSON.stringify(val); val = val.replace("'", ""); };
+            sqlStr = sqlStr + "'" + val + "',"
+
+        }
+        sqlStr = sqlStr.substring(0, sqlStr.length - 1);
+        sqlStr = sqlStr + "),";
+
+
+
+
+
+    }
+    sqlStr = sqlStr.substring(0, sqlStr.length - 1);
+    return sqlStr;
+}
+
+
+
+
+
+function buildCreateTableQuery(options){
+    var sqlStr = 'create table ' + options.tableName + "(";
+    for (var i = 0; i < options.model.length; i++) {
+        var column = options.model[i];
+        var typeC = '';
+        if (column.type === 'number') {
+            typeC = 'numeric(16,3)'
+        }
+        else if (column.type === 'string') {
+            typeC = 'varchar(255)'
+        }
+        else if (column.type === 'boolean') {
+            typeC = 'tinyint'
+        }
+        else if (column.type === 'date') {
+            typeC = 'datetime'
+        }
+
+        if (column.columnName === 'id' || column.columnName === 'ID' || column.columnName === '_id' || column.columnName === 'Id') {
+            if (column.type === 'number') {
+                sqlStr = sqlStr + column.columnName + " " + "integer" + " ";
+
+            }
+            else {
+                sqlStr = sqlStr + column.columnName + " " + typeC + " ";
+            }
+            sqlStr = sqlStr + "NOT NULL PRIMARY KEY"
+        }
+        else {
+            sqlStr = sqlStr + column.columnName + " " + typeC + " ";
+
+        }
+        sqlStr = sqlStr + ","
+
+
+    }
+    sqlStr = sqlStr.substring(0, sqlStr.length - 1);
+    sqlStr = sqlStr + ")"
+
+    return sqlStr;
+}
+
+
+
+
+
 function putDataMSSQL(options, cb) {
     function insertRows() {
 
-        var sqlStr = 'insert into ' + options.tableName + " (";
-        for (var j = 0; j < options.model.length; j++) {
-            sqlStr = sqlStr + options.model[j].columnName + ','
-
-        }
-        sqlStr = sqlStr.substring(0, sqlStr.length - 1);
-        sqlStr = sqlStr + ") values ";
-
-
-        for (var i = 0; i < options.data.length; i++) {
-            var row = options.data[i];
-
-
-
-
-            sqlStr = sqlStr + "("
-            for (var j = 0; j < options.model.length; j++) {
-                var val = objectPath.get(row, options.model[j].columnPath);
-                if (val === false) { val = 0 };
-                if (val === true) { val = 1 };
-                if (typeof val === "object") { val = JSON.stringify(val); val = val.replace("'", ""); };
-                sqlStr = sqlStr + "'" + val + "',"
-
-            }
-            sqlStr = sqlStr.substring(0, sqlStr.length - 1);
-            sqlStr = sqlStr + "),";
-
-
-
-
-
-        }
-        sqlStr = sqlStr.substring(0, sqlStr.length - 1);
+        var sqlStr = buildInsertQuery(options);
         console.log(sqlStr);
         mssql.connect().then((pool) => {
             pool.query(sqlStr);
@@ -693,39 +748,13 @@ function putDataMSSQL(options, cb) {
         }
         console.log("Connection to MSSQL Successful !");
 
-
-
         var sqlStr = 'select * from ' + options.tableName;
 
         new mssql.Request().query(sqlStr, function (err, result) {
 
             if (err) {
-                var sqlStr = 'create table ' + options.tableName + "(";
-                for (var i = 0; i < options.model.length; i++) {
-                    var column = options.model[i];
-                    var typeC = '';
-                    if (column.type === 'number') {
-                        typeC = 'numeric(16,3)'
-                    }
-                    else if (column.type === 'string') {
-                        typeC = 'varchar(255)'
-                    }
-                    else if (column.type === 'boolean') {
-                        typeC = 'tinyint'
-                    }
-                    else if (column.type === 'date') {
-                        typeC = 'datetime'
-                    }
-                    sqlStr = sqlStr + column.columnName + " " + typeC + " ";
-                    if (column.columnName === 'id' || column.columnName === 'ID' || column.columnName === '_id' || column.columnName === 'Id') {
-                        sqlStr = sqlStr + "NOT NULL PRIMARY KEY"
-                    }
-                    sqlStr = sqlStr + ","
+                var sqlStr = buildCreateTableQuery(options);
 
-
-                }
-                sqlStr = sqlStr.substring(0, sqlStr.length - 1);
-                sqlStr = sqlStr + ")"
                 console.log(sqlStr);
 
                 mssql.connect().then((pool) => {
@@ -744,14 +773,104 @@ function putDataMSSQL(options, cb) {
 
             }
             else {
+                sqlStr = "delete from "+options.tableName;
+                
+                mssql.connect().then((pool) => {
+                    pool.query(sqlStr);
+                })
+                    .then(result => {
+                        console.log("Table " + options.tableName + " dropped!");
+                        insertRows();
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    })
 
-                insertRows();
+                
 
 
             }
 
         });
     });
+
+}
+
+
+function putDataMySQL(options, cb) {
+    function insertRows() {
+
+        var sqlStr = buildInsertQuery(options);
+        console.log(sqlStr);
+
+        connection.query(sqlStr, function (err, result) {
+            if (err) {
+                console.log(err);
+            }
+            console.log("All data inserted!");
+            cb();
+            connection.end();
+
+
+        })
+
+        
+        //console.log("All data inserted!");
+    }
+
+
+
+    var connection = mysql.createConnection(options.db_config);
+
+    connection.connect( err => {
+        if (err) {
+            throw err;
+        }
+        console.log("Connection to MySQL Successful !");
+
+        var sqlStr = 'select * from ' + options.tableName;
+
+        connection.query(sqlStr, function (err, result) {
+
+            if (err) {
+                var sqlStr = buildCreateTableQuery(options);
+
+                console.log(sqlStr);
+
+                connection.query(sqlStr, function (err, result) {
+                    if (err) {
+                        console.log(err);
+                    }
+                    console.log("Table " + options.tableName + " created!");
+                    insertRows();
+
+
+                })
+
+
+            }
+            else {
+                sqlStr = "delete from "+options.tableName;
+                
+               
+                connection.query(sqlStr, function (err, result) {
+                    if (err) {
+                        console.log(err);
+                    }
+                    console.log("Table " + options.tableName + " dropped!");
+                    insertRows();
+
+
+                })
+
+                
+
+
+            }
+
+        });
+    });
+    
 
 }
 
@@ -854,18 +973,104 @@ app.post('/checkConnection', function (req, res) {
 
 function transferData(processObj) {
 
+    var srcObj = {};
+    var destObj = {};
+
     var lastTimeMilliSec = Date.parse(processObj.lasttime);
     var currTime = new Date();
     var currTimeMySQL = currTime.toISOString().slice(0, 19).replace('T', ' ');
-    var currTimeMilliSec = currTime.getTime(); 
+    var currTimeMilliSec = currTime.getTime();
     var period = processObj.periodmin * 60000;//milliseconds
-    if (currTimeMilliSec - lastTimeMilliSec >= period) {
+    if (currTimeMilliSec - lastTimeMilliSec >= period && processObj.active === 1) {
         console.log('started ' + processObj.id);
-        var sqlStr = "update processes set lasttime = '"+currTimeMySQL+"' where id = "+processObj.id;
+        var sqlStr = "update processes set lasttime = '" + currTimeMySQL + "' where id = " + processObj.id;
         con.query(sqlStr, function (err, result) {
             if (err) {
                 console.log(err);
             }
+            var sqlStr = "select * from sources where id = " + processObj.sourceid;
+            con.query(sqlStr, function (err, result) {
+                if (err) {
+                    console.log(err);
+                }
+                srcObj = result[0];
+                var sqlStr = "select * from destinations where id = " + processObj.destinationid;
+                con.query(sqlStr, function (err, result) {
+                    if (err) {
+                        console.log(err);
+                    }
+                    destObj = result[0];
+
+                    getData(srcObj, (data) => {
+                        console.log(data);
+                        if (destObj.typeDB === "mssql") {
+                            var model = parseModel(data[0]);
+                            var options = {
+                                db_config: {
+                                    "user": destObj.login,
+                                    "password": destObj.password,
+                                    "server": destObj.host, // for local machine
+                                    "database": destObj.dbName, // name of database
+                                    "options": {
+                                        "enableArithAbort": true
+                                    },
+                                    pool: {
+                                        max: 10,
+                                        min: 0,
+                                        idleTimeoutMillis: 30000
+                                    }
+
+                                },
+                                tableName: srcObj.tableName,
+                                model: model,
+                                data: data
+
+                            }
+                            putDataMSSQL(options, () => {
+
+                            });
+
+                        }
+
+                        if (destObj.typeDB === "mysql") {
+                            var model = parseModel(data[0]);
+                            var options = {
+                                db_config: {
+                                    "user": destObj.login,
+                                    "password": destObj.password,
+                                    "server": destObj.host, // for local machine
+                                    "database": destObj.dbName, // name of database
+                                    "options": {
+                                        "enableArithAbort": true
+                                    },
+                                    pool: {
+                                        max: 10,
+                                        min: 0,
+                                        idleTimeoutMillis: 30000
+                                    }
+
+                                },
+                                tableName: srcObj.tableName,
+                                model: model,
+                                data: data
+
+                            }
+                            putDataMySQL(options, () => {
+
+                            });
+
+                        }
+
+
+
+                    });
+
+
+
+
+                });
+
+            });
 
 
         });
