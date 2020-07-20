@@ -633,7 +633,7 @@ function parseModel(parserData) {
 }
 
 
-function buildInsertQuery(options){
+function buildInsertQuery(options) {
     var sqlStr = 'insert into ' + options.tableName + " (";
     for (var j = 0; j < options.model.length; j++) {
         sqlStr = sqlStr + options.model[j].columnName + ','
@@ -674,7 +674,7 @@ function buildInsertQuery(options){
 
 
 
-function buildCreateTableQuery(options){
+function buildCreateTableQuery(options) {
     var sqlStr = 'create table ' + options.tableName + "(";
     for (var i = 0; i < options.model.length; i++) {
         var column = options.model[i];
@@ -757,36 +757,54 @@ function putDataMSSQL(options, cb) {
 
                 console.log(sqlStr);
 
-                mssql.connect().then((pool) => {
-                    pool.query(sqlStr);
-                })
-                    .then(result => {
+                // mssql.connect().then((pool) => {
+                //     pool.query(sqlStr);
+                // })
+                //     .then(result => {
+                //         console.log("Table " + options.tableName + " created!");
+                //         insertRows();
+                //     })
+                //     .catch(error => {
+                //         console.log(error);
+                //     })
+
+                new mssql.Request().query(sqlStr, function (err, result) {
+                    if (err) {
+                        console.log(err);
+                    }
+                    else {
                         console.log("Table " + options.tableName + " created!");
                         insertRows();
-                    })
-                    .catch(error => {
-                        console.log(error);
-                    })
+                    }
 
-
+                })
 
 
             }
             else {
-                sqlStr = "delete from "+options.tableName;
-                
-                mssql.connect().then((pool) => {
-                    pool.query(sqlStr);
-                })
-                    .then(result => {
+                sqlStr = "delete from " + options.tableName;
+
+                // mssql.connect().then((pool) => {
+                //     pool.query(sqlStr);
+                // })
+                //     .then(result => {
+                //         console.log("Table " + options.tableName + " dropped!");
+                //         insertRows();
+                //     })
+                //     .catch(error => {
+                //         console.log(error);
+                //     })
+
+                new mssql.Request().query(sqlStr, function (err, result) {
+                    if (err) {
+                        console.log(err);
+                    }
+                    else {
                         console.log("Table " + options.tableName + " dropped!");
                         insertRows();
-                    })
-                    .catch(error => {
-                        console.log(error);
-                    })
+                    }
 
-                
+                })
 
 
             }
@@ -814,7 +832,7 @@ function putDataMySQL(options, cb) {
 
         })
 
-        
+
         //console.log("All data inserted!");
     }
 
@@ -822,7 +840,7 @@ function putDataMySQL(options, cb) {
 
     var connection = mysql.createConnection(options.db_config);
 
-    connection.connect( err => {
+    connection.connect(err => {
         if (err) {
             throw err;
         }
@@ -850,9 +868,9 @@ function putDataMySQL(options, cb) {
 
             }
             else {
-                sqlStr = "delete from "+options.tableName;
-                
-               
+                sqlStr = "delete from " + options.tableName;
+
+
                 connection.query(sqlStr, function (err, result) {
                     if (err) {
                         console.log(err);
@@ -863,18 +881,93 @@ function putDataMySQL(options, cb) {
 
                 })
 
-                
+
 
 
             }
 
         });
     });
-    
+
 
 }
 
+function putDataPgSQL(options, cb) {
+    function insertRows() {
 
+        var sqlStr = buildInsertQuery(options);
+        console.log(sqlStr);
+
+        connection.query(sqlStr, function (err, result) {
+            if (err) {
+                console.log(err);
+            }
+            console.log("All data inserted!");
+            cb();
+            connection.end();
+
+
+        })
+
+
+        //console.log("All data inserted!");
+    }
+
+
+    console.log(options.db_config);
+    var connection = new Pool(options.db_config);
+
+    // connection.connect(err => {
+    //     if (err) {
+    //         throw err;
+    //     }
+    //     console.log("Connection to MySQL Successful !");
+
+        var sqlStr = 'select * from ' + options.tableName;
+
+        connection.query(sqlStr, function (err, result) {
+
+            if (err) {
+                var sqlStr = buildCreateTableQuery(options);
+
+                console.log(sqlStr);
+
+                connection.query(sqlStr, function (err, result) {
+                    if (err) {
+                        console.log(err);
+                    }
+                    console.log("Table " + options.tableName + " created!");
+                    insertRows();
+
+
+                })
+
+
+            }
+            else {
+                sqlStr = "delete from " + options.tableName;
+
+
+                connection.query(sqlStr, function (err, result) {
+                    if (err) {
+                        console.log(err);
+                    }
+                    console.log("Table " + options.tableName + " dropped!");
+                    insertRows();
+
+
+                })
+
+
+
+
+            }
+
+        });
+    // });
+
+
+}
 // getData(options_creatio, function(data){
 
 // })
@@ -1056,6 +1149,34 @@ function transferData(processObj) {
 
                             }
                             putDataMySQL(options, () => {
+
+                            });
+
+                        }
+                        if (destObj.typeDB === "pgsql") {
+                            var model = parseModel(data[0]);
+                            var options = {
+                                db_config: {
+                                    "user": destObj.login,
+                                    "password": destObj.password,
+                                    "host": destObj.host, // for local machine
+                                    "database": destObj.dbName, // name of database
+                                    // "options": {
+                                    //     "enableArithAbort": true
+                                    // },
+                                    // pool: {
+                                    //     max: 10,
+                                    //     min: 0,
+                                    //     idleTimeoutMillis: 30000
+                                    // }
+
+                                },
+                                tableName: srcObj.tableName,
+                                model: model,
+                                data: data
+
+                            }
+                            putDataPgSQL(options, () => {
 
                             });
 
